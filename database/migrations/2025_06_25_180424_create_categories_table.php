@@ -18,7 +18,7 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('image')->nullable();
             $table->string('icon', 100)->nullable();
-            $table->string('color', 7)->nullable();
+            $table->string('color', 7)->nullable(); // Hex color
             $table->foreignId('parent_id')->nullable()->constrained('categories')->onDelete('set null');
             $table->integer('level')->default(0);
             $table->integer('sort_order')->default(0);
