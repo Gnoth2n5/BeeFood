@@ -25,7 +25,7 @@ return new class extends Migration
             $table->json('health_conditions')->nullable(); // Medical conditions
             $table->enum('cooking_experience', ['beginner', 'intermediate', 'advanced'])->default('beginner');
             $table->timestamps();
-
+            
             $table->index('user_id');
         });
     }

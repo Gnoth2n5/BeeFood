@@ -42,6 +42,33 @@ return new class extends Migration
             $table->foreignId('approved_by')->nullable()->constrained('users')->onDelete('set null');
             $table->timestamp('approved_at')->nullable();
             $table->text('rejection_reason')->nullable();
+
+            // SEO & metadata
+            $table->string('meta_title', 255)->nullable();
+            $table->text('meta_description')->nullable();
+            $table->string('meta_keywords', 500)->nullable();
+
+            // Statistics
+            $table->integer('view_count')->default(0);
+            $table->integer('favorite_count')->default(0);
+            $table->integer('rating_count')->default(0);
+            $table->decimal('average_rating', 3, 2)->default(0.00);
+
+            // Timestamps
+            $table->timestamp('published_at')->nullable();
+            $table->timestamps();
+
+            $table->index('slug');
+            $table->index('user_id');
+            $table->index('status');
+            $table->index('approved_by');
+            $table->index('published_at');
+            $table->index('created_at');
+            $table->index('average_rating');
+            $table->index('view_count');
+
+            // Full-text search index
+            $table->fullText(['title', 'description', 'summary']);
         });
     }
 
