@@ -12,8 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('collection_recipes', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
+            $table->foreignId('collection_id')->constrained()->onDelete('cascade');
+            $table->foreignId('recipe_id')->constrained()->onDelete('cascade');
+            $table->timestamp('added_at')->useCurrent();
+
+            $table->primary(['collection_id', 'recipe_id']);
         });
     }
 
