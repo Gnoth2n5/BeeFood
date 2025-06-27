@@ -13,7 +13,16 @@ return new class extends Migration
     {
         Schema::create('collections', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->boolean('is_public')->default(false);
+            $table->string('cover_image')->nullable();
+            $table->integer('recipe_count')->default(0);
             $table->timestamps();
+
+            $table->index('user_id');
+            $table->index('is_public');
         });
     }
 
