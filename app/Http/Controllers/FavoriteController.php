@@ -14,9 +14,7 @@ class FavoriteController extends Controller
         private FavoriteService $favoriteService
     ) {}
 
-    /**
-     * Display a listing of user's favorite recipes.
-     */
+   
     public function index(Request $request): View
     {
         $favorites = $this->favoriteService->getUserFavorites($request->user());
@@ -24,9 +22,7 @@ class FavoriteController extends Controller
         return view('favorites.index', compact('favorites'));
     }
 
-    /**
-     * Toggle favorite status for a recipe.
-     */
+  
     public function toggle(Recipe $recipe): JsonResponse
     {
         $result = $this->favoriteService->toggle($recipe, request()->user());
@@ -39,9 +35,7 @@ class FavoriteController extends Controller
         ]);
     }
 
-    /**
-     * Check if recipe is favorited by user.
-     */
+    
     public function check(Recipe $recipe): JsonResponse
     {
         $isFavorited = $this->favoriteService->isFavorited($recipe, request()->user());
@@ -50,6 +44,34 @@ class FavoriteController extends Controller
         return response()->json([
             'is_favorited' => $isFavorited,
             'favorite_count' => $favoriteCount
+        ]);
+    }
+    
+    public function remove(Recipe $recipe): JsonResponse
+    {
+        $removed = $this->favoriteService->removeFavorite($recipe, request()->user());
+
+        if ($removed) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Đã xóa khỏi danh sách yêu thích.',
+                'favorite_count' => $this->favoriteService->getFavoriteCount($recipe)
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'Không tìm thấy trong danh sách yêu thích.'
+        ], 404);
+    }
+
+    
+    public function count(): JsonResponse
+    {
+        $count = $this->favoriteService->getUserFavoriteCount(request()->user());
+
+        return response()->json([
+            'count' => $count
         ]);
     }
 
