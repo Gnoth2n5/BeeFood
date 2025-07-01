@@ -98,3 +98,16 @@ new class extends Component
                        placeholder="Tìm kiếm công thức...">
             </div>
         </div>
+                <!-- Right side items -->
+                <div class="flex items-center lg:order-3">
+                    @auth
+                        <!-- Notifications -->
+                        <button type="button" class="p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700">
+                            <span class="sr-only">View notifications</span>
+                            <div class="relative">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                                </svg>
+                                <div class="absolute inline-flex items-center justify-center w-2 h-2 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-1 -right-1 dark:border-gray-900"></div>
+                            </div>
+                        </button>
