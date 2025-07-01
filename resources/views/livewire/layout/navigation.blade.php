@@ -197,3 +197,15 @@ new class extends Component
                     </div>
                 </div>
             @else
+              <!-- Guest buttons -->
+              <div class="flex items-center space-x-3">
+                <a href="{{ route('login') }}" 
+                   class="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-500 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                    Đăng nhập
+                </a>
+                <a href="{{ route('register') }}" 
+                   class="text-white bg-orange-600 hover:bg-orange-700 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-4 py-2 transition-colors duration-200">
+                    Đăng ký
+                </a>
+            </div>
+        @endauth
