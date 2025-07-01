@@ -111,3 +111,23 @@ new class extends Component
                                 <div class="absolute inline-flex items-center justify-center w-2 h-2 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-1 -right-1 dark:border-gray-900"></div>
                             </div>
                         </button>
+                        
+        <!-- User menu -->
+        <div class="relative ml-3" x-data="{ open: false }">
+            <div>
+                <button type="button" 
+                        @click="open = !open"
+                        class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600" 
+                        id="user-menu-button" 
+                        aria-expanded="false" 
+                        data-dropdown-toggle="user-dropdown" 
+                        data-dropdown-placement="bottom">
+                    <span class="sr-only">Open user menu</span>
+                    <div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                        <span class="text-sm font-medium text-white">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </span>
+                    </div>
+                </button>
+            </div>
+            
