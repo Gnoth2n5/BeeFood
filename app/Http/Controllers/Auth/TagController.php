@@ -100,5 +100,63 @@ class TagController extends Controller
                         ->with('success', 'Tag đã được cập nhật thành công.');
     }
 
-    
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(Tag $tag): RedirectResponse
+    {
+        $this->authorize('delete', $tag);
+
+        $deleted = $this->tagService->delete($tag);
+
+        if ($deleted) {
+            return redirect()->route('tags.index')
+                            ->with('success', 'Tag đã được xóa thành công.');
+        }
+
+        return redirect()->route('tags.index')
+                        ->with('error', 'Không thể xóa tag có chứa công thức.');
+    }
+
+    /**
+     * Get tags for select dropdown.
+     */
+    public function getForSelect(): JsonResponse
+    {
+        $tags = $this->tagService->getForSelect();
+
+        return response()->json($tags);
+    }
+
+    /**
+     * Search tags.
+     */
+    public function search(Request $request): JsonResponse
+    {
+        $search = $request->get('q', '');
+        $tags = $this->tagService->search($search);
+
+        return response()->json($tags);
+    }
+
+    /**
+     * Get popular tags.
+     */
+    public function popular(): JsonResponse
+    {
+        $tags = $this->tagService->getPopular();
+
+        return response()->json($tags);
+    }
+
+    /**
+     * Get tags for autocomplete.
+     */
+    public function autocomplete(Request $request): JsonResponse
+    {
+        $search = $request->get('q', '');
+        $tags = $this->tagService->getForAutocomplete($search);
+
+        return response()->json($tags);
+    }
 } 
