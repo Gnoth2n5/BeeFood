@@ -123,3 +123,17 @@
                 </ol>
             </div>
         </div>
+      <!-- Mẹo hay, nút tương tác -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-6 pb-8">
+            <!-- Mẹo hay -->
+            <div class="bg-orange-50 rounded-lg p-4 md:col-span-2">
+                <h3 class="font-semibold text-orange-700 mb-2 text-sm">Mẹo hay</h3>
+                <ul class="list-disc list-inside text-sm text-gray-700 space-y-1">
+                    @if(!empty($recipe->tips))
+                        <li>{{ $recipe->tips }}</li>
+                    @else
+                        <li>Hãy chọn nguyên liệu tươi ngon để món ăn đạt hương vị tốt nhất.</li>
+                    @endif
+                </ul>
+            </div>
+        </div>
