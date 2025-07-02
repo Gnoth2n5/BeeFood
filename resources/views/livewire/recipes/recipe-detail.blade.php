@@ -50,3 +50,27 @@
                 </div>
             </div>
         </div>
+
+        <!-- Info nhanh -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4 px-6 py-6 border-b">
+            <div class="flex flex-col items-center">
+                <span class="text-lg font-bold text-orange-600">{{ $recipe->cooking_time }} phút</span>
+                <span class="text-xs text-gray-500">Thời gian nấu</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-lg font-bold text-orange-600">{{ $recipe->preparation_time }} phút</span>
+                <span class="text-xs text-gray-500">Chuẩn bị</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-lg font-bold text-orange-600">{{ $recipe->servings }}</span>
+                <span class="text-xs text-gray-500">Khẩu phần</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-lg font-bold text-orange-600 capitalize">{{ $recipe->difficulty == 'easy' ? 'Dễ' : ($recipe->difficulty == 'medium' ? 'Trung bình' : 'Khó') }}</span>
+                <span class="text-xs text-gray-500">Độ khó</span>
+            </div>
+            <div class="flex flex-col items-center">
+                <span class="text-lg font-bold text-orange-600">{{ $recipe->rating_count }}</span>
+                <span class="text-xs text-gray-500">Lượt đánh giá</span>
+            </div>
+        </div>
