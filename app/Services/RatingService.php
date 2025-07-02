@@ -71,5 +71,34 @@ class RatingService
                     ->where('recipe_id', $recipe->id)
                     ->first();
     }
+       /**
+     * Get average rating for a recipe.
+     */
+    public function getAverageRating(Recipe $recipe): float
+    {
+        return $recipe->ratings()->avg('rating') ?? 0;
+    }
 
+    /**
+     * Get rating count for a recipe.
+     */
+    public function getRatingCount(Recipe $recipe): int
+    {
+        return $recipe->ratings()->count();
+    }
+
+    /**
+     * Get rating distribution for a recipe.
+     */
+    public function getRatingDistribution(Recipe $recipe): array
+    {
+        $distribution = [];
+        
+        for ($i = 1; $i <= 5; $i++) {
+            $count = $recipe->ratings()->where('rating', $i)->count();
+            $distribution[$i] = $count;
+        }
+
+        return $distribution;
+    }
 } 
