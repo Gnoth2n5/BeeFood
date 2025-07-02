@@ -1,6 +1,6 @@
-<div class="recipe-card">
-  <div class="">
-    @if($recipe->featured_image)
+<div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden group">
+    <div class="aspect-video bg-gray-200 relative overflow-hidden">
+        @if($recipe->featured_image)
             <img src="{{ Storage::url($recipe->featured_image) }}" 
                  alt="{{ $recipe->title }}" 
                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -12,6 +12,26 @@
                 </svg>
             </div>
         @endif
+        
+        <!-- Favorite Button -->
+        <div class="absolute top-3 right-3">
+            <button 
+                class="w-10 h-10 flex items-center justify-center bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors p-0"
+                wire:click="toggleFavorite({{ $recipe->id }})"
+                wire:loading.attr="disabled"
+                aria-label="Yêu thích"
+            >
+                @if(auth()->check() && $recipe->isFavoritedBy(auth()->user()))
+                    <svg class="w-6 h-6 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                @else
+                    <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                @endif
+            </button>
+        </div>
 
         <!-- Difficulty Badge -->
         <div class="absolute top-2 left-2">
@@ -31,6 +51,14 @@
                 {{ $difficultyText[$recipe->difficulty] }}
             </span>
         </div>
+    </div>
+
+    <div class="p-4">
+        <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-orange-600 transition-colors">
+            <a href="{{ route('recipes.show', $recipe) }}">{{ $recipe->title }}</a>
+        </h3>
+
+        <p class="text-sm text-gray-600 mb-3 line-clamp-2">{{ $recipe->summary }}</p>
 
         <div class="flex items-center justify-between mb-3">
             <div class="flex items-center space-x-2">
@@ -57,6 +85,21 @@
             </div>
         </div>
 
+        <div class="flex items-center justify-between text-sm text-gray-500">
+            <span class="flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {{ $recipe->cooking_time }} phút
+            </span>
+            <span class="flex items-center">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                {{ $recipe->servings }} người
+            </span>
+        </div>
+
         <!-- Categories -->
         @if($recipe->categories->count() > 0)
             <div class="mt-3 flex flex-wrap gap-1">
@@ -72,6 +115,5 @@
                 @endif
             </div>
         @endif
-  </div>
-
-</div>
+    </div>
+</div> 
