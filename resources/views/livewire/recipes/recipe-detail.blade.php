@@ -74,3 +74,52 @@
                 <span class="text-xs text-gray-500">Lượt đánh giá</span>
             </div>
         </div>
+
+        <!-- Mô tả + tags -->
+        <div class="px-6 py-4 border-b">
+            <div class="text-gray-700 mb-2">{{ $recipe->summary }}</div>
+            <div class="flex flex-wrap gap-2">
+                @foreach($recipe->categories as $cat)
+                    <span class="px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded-full">{{ $cat->name }}</span>
+                @endforeach
+                @foreach($recipe->tags as $tag)
+                    <span class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">#{{ $tag->name }}</span>
+                @endforeach
+            </div>
+        </div>
+
+        <!-- Nội dung chính: Nguyên liệu & Cách làm -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 px-6 py-8">
+            <!-- Nguyên liệu -->
+            <div class="md:col-span-1">
+                <h2 class="text-lg font-semibold mb-3 text-gray-900">Nguyên liệu</h2>
+                <ul class="space-y-2">
+                    @foreach($recipe->ingredients as $ingredient)
+                        <li class="flex justify-between items-center border-b pb-1">
+                            <span class="text-gray-700">{{ $ingredient['name'] }}</span>
+                            <span class="text-gray-500 text-sm">{{ $ingredient['amount'] ?? '' }} {{ $ingredient['unit'] ?? '' }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            </div>
+            <!-- Cách làm -->
+            <div class="md:col-span-2">
+                <h2 class="text-lg font-semibold mb-3 text-gray-900">Cách làm</h2>
+                <ol class="space-y-6 list-decimal list-inside">
+                    @foreach($recipe->instructions as $step)
+                        <li class="flex gap-4 items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-lg">{{ $step['step'] ?? $loop->iteration }}</div>
+                            <div>
+                                <div class="font-medium text-gray-800">{{ $step['instruction'] }}</div>
+                                @if(!empty($step['image']))
+                                    <img src="{{ Storage::url($step['image']) }}" alt="Bước {{ $step['step'] ?? $loop->iteration }}" class="w-28 h-20 object-cover rounded mt-2" />
+                                @endif
+                                @if(!empty($step['time']))
+                                    <div class="text-xs text-gray-500 mt-1">{{ $step['time'] }} phút</div>
+                                @endif
+                            </div>
+                        </li>
+                    @endforeach
+                </ol>
+            </div>
+        </div>
