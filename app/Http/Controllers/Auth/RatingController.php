@@ -14,7 +14,8 @@ class RatingController extends Controller
 {
     public function __construct(
         private RatingService $ratingService
-    ) {}
+    ) {
+    }
 
     /**
      * Store a newly created rating.
@@ -58,11 +59,11 @@ class RatingController extends Controller
 
         if (!$rating) {
             $message = 'Không tìm thấy đánh giá.';
-            
+
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 404);
             }
-            
+
             return back()->with('error', $message);
         }
 
@@ -92,11 +93,11 @@ class RatingController extends Controller
 
         if (!$rating) {
             $message = 'Không tìm thấy đánh giá.';
-            
+
             if (request()->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 404);
             }
-            
+
             return back()->with('error', $message);
         }
 
@@ -116,5 +117,23 @@ class RatingController extends Controller
         return back()->with('success', 'Đánh giá đã được xóa.');
     }
 
-    
-} 
+    /**
+     * Get rating statistics for a recipe.
+     */
+    public function getStats(Recipe $recipe): JsonResponse
+    {
+        $stats = [
+            'average_rating' => $this->ratingService->getAverageRating($recipe),
+            'rating_count' => $this->ratingService->getRatingCount($recipe),
+            'distribution' => $this->ratingService->getRatingDistribution($recipe),
+        ];
+
+        // Get user's rating if authenticated
+        if (auth()->check()) {
+            $userRating = $this->ratingService->getUserRating($recipe, auth()->user());
+            $stats['user_rating'] = $userRating;
+        }
+
+        return response()->json($stats);
+    }
+}
