@@ -3,22 +3,27 @@
 namespace App\Livewire\Auth;
 
 use App\Services\AuthService;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\Attributes\Layout;
+use Livewire\Attributes\Rule;
 
 #[Layout('layouts.guest')]
 class Register extends Component
 {
+  #[Rule('required|string|max:255')]
   public $name = '';
-  public $email = '';
-  public $password = '';
-  public $password_confirmation = '';
-  public $isLoading = false;
 
-  protected $rules = [
-    'name' => 'required|string|max:255',
-    'email' => 'required|email|max:255|unique:users,email',
-    'password' => 'required|min:6|confirmed',
-  ];
+  #[Rule('required|email|unique:users,email')]
+  public $email = '';
+
+  #[Rule('required|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/')]
+  public $password = '';
+
+  #[Rule('required|same:password')]
+  public $password_confirmation = '';
+
+  public $isLoading = false;
 
   public function register()
   {
@@ -29,13 +34,19 @@ class Register extends Component
 
       $authService = app(AuthService::class);
 
-      if ($authService->register($this->name, $this->email, $this->password)) {
-        return redirect()->route('login')->with('success', 'Đăng ký thành công! Vui lòng đăng nhập.');
-      }
+      $user = $authService->register([
+        'name' => $this->name,
+        'email' => $this->email,
+        'password' => $this->password,
+      ]);
 
-      $this->addError('general', 'Có lỗi xảy ra. Vui lòng thử lại.');
+      // Login user
+      Auth::login($user);
+      session()->regenerate();
+
+      return redirect('/')->with('success', 'Đăng ký thành công! Chào mừng bạn đến với BeeFood.');
     } catch (\Exception $e) {
-      $this->addError('general', 'Có lỗi xảy ra. Vui lòng thử lại.');
+      $this->addError('general', 'Có lỗi xảy ra trong quá trình đăng ký. Vui lòng thử lại.');
     } finally {
       $this->isLoading = false;
     }
