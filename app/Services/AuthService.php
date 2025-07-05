@@ -3,19 +3,42 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\UserProfile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class AuthService
 {
+  /**
+   * Attempt to login user
+   */
   public function login(string $email, string $password, bool $remember = false): bool
   {
     if (Auth::attempt(['email' => $email, 'password' => $password], $remember)) {
+      $user = Auth::user();
+
+      // Update last login
+      $user->update([
+        'last_login_at' => now(),
+        'login_count' => $user->login_count + 1
+      ]);
+
+      // Assign user role if not assigned
+      if (!$user->hasRole('user') && !$user->hasRole('manager') && !$user->hasRole('admin')) {
+        $user->assignRole('user');
+      }
+
+      session()->regenerate();
       return true;
     }
 
     return false;
   }
 
+  /**
+   * Register new user
+   */
   public function register(array $data): User
   {
     DB::beginTransaction();
@@ -53,6 +76,9 @@ class AuthService
     }
   }
 
+  /**
+   * Logout user
+   */
   public function logout(): void
   {
     Auth::logout();
@@ -60,16 +86,22 @@ class AuthService
     session()->regenerateToken();
   }
 
+  /**
+   * Check if user can access specific feature
+   */
+  public function canAccess(string $permission): bool
+  {
+    return Auth::check() && Auth::user()->can($permission);
+  }
+
+  /**
+   * Get current user with profile
+   */
   public function getCurrentUser(): ?User
   {
     if (Auth::check()) {
       return Auth::user()->load('profile');
     }
     return null;
-  }
-
-  public function canAccess(string $permission): bool
-  {
-    return Auth::check() && Auth::user()->can($permission);
   }
 }
