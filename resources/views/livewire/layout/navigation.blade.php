@@ -1,6 +1,7 @@
 <?php
 
 use Livewire\Volt\Component;
+use App\Services\AuthService;
 
 new class extends Component
 {
@@ -14,9 +15,9 @@ new class extends Component
     
     public function logout()
     {
-        auth()->logout();
-        session()->invalidate();
-        session()->regenerateToken();
+
+        $authService = app(AuthService::class);
+        $authService->logout();
         
         return $this->redirect('/', navigate: true);
     }
@@ -38,6 +39,7 @@ new class extends Component
                     </span>
                 </div>
             </a>
+
 
             <!-- Desktop Navigation -->
             <div class="hidden md:flex items-center space-x-1">
@@ -99,7 +101,9 @@ new class extends Component
                        placeholder="Tìm kiếm công thức...">
             </div>
         </div>
-   <!-- Right side items -->
+
+        <!-- Right side items -->
+
         <div class="flex items-center lg:order-3">
             @auth
                 <!-- Notifications -->
@@ -124,11 +128,16 @@ new class extends Component
                                 data-dropdown-toggle="user-dropdown" 
                                 data-dropdown-placement="bottom">
                             <span class="sr-only">Open user menu</span>
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
-                                <span class="text-sm font-medium text-white">
-                                    {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                </span>
-                            </div>
+
+                            @if(auth()->user()->avatar)
+                                <img src="{{ Storage::url(auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}" class="w-8 h-8 rounded-full object-cover">
+                            @else
+                                <div class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
+                                    <span class="text-sm font-medium text-white">
+                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                                    </span>
+                                </div>
+                            @endif
                         </button>
                     </div>
                     
@@ -154,7 +163,7 @@ new class extends Component
                         
                         <hr class="my-1 border-gray-200 dark:border-gray-600">
                         
-                        <a href="#" 
+                        <a href="{{ route('profile') }}" 
                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white" 
                            role="menuitem" 
                            tabindex="-1" 
@@ -196,6 +205,7 @@ new class extends Component
                             </div>
                         </button>
                     </div>
+
                 </div>
             @else
                 <!-- Guest buttons -->
@@ -224,7 +234,10 @@ new class extends Component
             </button>
         </div>
     </div>
- <!-- Mobile menu -->
+
+
+    <!-- Mobile menu -->
+
     <div class="items-center justify-between hidden w-full md:hidden md:w-auto md:order-1" id="navbar-user">
         <div class="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
             
