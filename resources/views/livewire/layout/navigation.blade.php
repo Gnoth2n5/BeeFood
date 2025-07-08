@@ -15,6 +15,7 @@ new class extends Component
     
     public function logout()
     {
+
         $authService = app(AuthService::class);
         $authService->logout();
         
@@ -38,6 +39,7 @@ new class extends Component
                     </span>
                 </div>
             </a>
+
 
             <!-- Desktop Navigation -->
             <div class="hidden md:flex items-center space-x-1">
@@ -101,6 +103,7 @@ new class extends Component
         </div>
 
         <!-- Right side items -->
+
         <div class="flex items-center lg:order-3">
             @auth
                 <!-- Notifications -->
@@ -125,6 +128,7 @@ new class extends Component
                                 data-dropdown-toggle="user-dropdown" 
                                 data-dropdown-placement="bottom">
                             <span class="sr-only">Open user menu</span>
+
                             @if(auth()->user()->avatar)
                                 <img src="{{ Storage::url(auth()->user()->avatar) }}" alt="{{ auth()->user()->name }}" class="w-8 h-8 rounded-full object-cover">
                             @else
@@ -201,6 +205,7 @@ new class extends Component
                             </div>
                         </button>
                     </div>
+
                 </div>
             @else
                 <!-- Guest buttons -->
@@ -230,7 +235,9 @@ new class extends Component
         </div>
     </div>
 
+
     <!-- Mobile menu -->
+
     <div class="items-center justify-between hidden w-full md:hidden md:w-auto md:order-1" id="navbar-user">
         <div class="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
             
