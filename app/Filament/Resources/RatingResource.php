@@ -4,12 +4,17 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\RatingResource\Pages;
 use App\Filament\Resources\RatingResource\RelationManagers;
+use App\Models\Rating;
+use App\Models\User;
+use App\Models\Recipe;
 use Filament\Forms;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use App\Models\Rating;
-use Filament\Forms\Components\TextInput;
-
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Collection;
 
 class RatingResource extends Resource
 {
@@ -20,18 +25,34 @@ class RatingResource extends Resource
   protected static ?string $navigationGroup = 'Quản lý nội dung';
 
   protected static ?int $navigationSort = 6;
+
   public static function form(Form $form): Form
   {
     return $form
       ->schema([
-        TextInput::make('rating')
-          ->required()
-          ->numeric()
-          ->minValue(1)
-          ->maxValue(5),
-        TextInput::make('comment')
-          ->required()
-          ->maxLength(255),
+        Forms\Components\Section::make('Thông tin đánh giá')
+          ->schema([
+            Forms\Components\Select::make('user_id')
+              ->label('Người đánh giá')
+              ->options(User::pluck('name', 'id'))
+              ->searchable()
+              ->required(),
+            Forms\Components\Select::make('recipe_id')
+              ->label('Công thức')
+              ->options(Recipe::pluck('title', 'id'))
+              ->searchable()
+              ->required(),
+            Forms\Components\Select::make('rating')
+              ->label('Điểm đánh giá')
+              ->options([
+                1 => '1 sao',
+                2 => '2 sao',
+                3 => '3 sao',
+                4 => '4 sao',
+                5 => '5 sao',
+              ])
+              ->required(),
+          ])->columns(2),
       ]);
   }
 
@@ -100,6 +121,13 @@ class RatingResource extends Resource
       ->defaultSort('created_at', 'desc');
   }
 
+  public static function getRelations(): array
+  {
+    return [
+      //
+    ];
+  }
+
   public static function getPages(): array
   {
     return [
@@ -107,5 +135,11 @@ class RatingResource extends Resource
       'create' => Pages\CreateRating::route('/create'),
       'edit' => Pages\EditRating::route('/{record}/edit'),
     ];
+  }
+
+  public static function getEloquentQuery(): Builder
+  {
+    return parent::getEloquentQuery()
+      ->with(['user', 'recipe']);
   }
 }
