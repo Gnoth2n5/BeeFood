@@ -1,5 +1,5 @@
 <div>
-    
+    <!-- Rating Summary -->
     <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold text-gray-900">Đánh giá công thức</h3>
@@ -23,9 +23,9 @@
             @endauth
         </div>
 
-        
+        <!-- Rating Stats -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            
+            <!-- Average Rating -->
             <div class="text-center">
                 <div class="text-3xl font-bold text-gray-900 mb-2">{{ number_format($averageRating, 1) }}</div>
                 <div class="flex items-center justify-center mb-2">
@@ -38,7 +38,7 @@
                 <div class="text-sm text-gray-600">{{ $ratingCount }} đánh giá</div>
             </div>
 
-            
+            <!-- Rating Distribution -->
             <div class="md:col-span-2">
                 @for($i = 5; $i >= 1; $i--)
                     @php
@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        
+        <!-- User Rating Display -->
         @if($userRating)
             <div class="mt-6 p-4 bg-orange-50 rounded-lg border border-orange-200">
                 <div class="flex items-center justify-between">
@@ -101,14 +101,14 @@
         @endif
     </div>
 
-    
+    <!-- Rating Modal -->
     @if($showRatingModal)
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                
+                <!-- Background overlay -->
                 <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
 
-                
+                <!-- Modal panel -->
                 <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
                     <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                         <div class="sm:flex sm:items-start">
@@ -122,7 +122,7 @@
                                     {{ $userRating ? 'Cập nhật đánh giá' : 'Đánh giá công thức' }}
                                 </h3>
                                 <div class="mt-4">
-                                    
+                                    <!-- Star Rating -->
                                     <div class="mb-4">
                                         <label class="block text-sm font-medium text-gray-700 mb-2">Số sao đánh giá</label>
                                         <div class="flex items-center space-x-1">

@@ -7,6 +7,9 @@ use Illuminate\Support\Str;
 
 class CategoryService
 {
+    /**
+     * Create a new category.
+     */
     public function create(array $data): Category
     {
         $category = new Category($data);
@@ -16,6 +19,9 @@ class CategoryService
         return $category;
     }
 
+    /**
+     * Update an existing category.
+     */
     public function update(Category $category, array $data): Category
     {
         $category->update($data);
@@ -25,6 +31,9 @@ class CategoryService
         return $category;
     }
 
+    /**
+     * Delete a category.
+     */
     public function delete(Category $category): bool
     {
         // Check if category has recipes
@@ -35,6 +44,9 @@ class CategoryService
         return $category->delete();
     }
 
+    /**
+     * Get all categories with recipe count.
+     */
     public function getAllWithRecipeCount()
     {
         return Category::withCount('recipes')
@@ -42,6 +54,9 @@ class CategoryService
                       ->get();
     }
 
+    /**
+     * Get categories for select dropdown.
+     */
     public function getForSelect()
     {
         return Category::select('id', 'name')
@@ -49,6 +64,9 @@ class CategoryService
                       ->get();
     }
 
+    /**
+     * Get category with recipes.
+     */
     public function getWithRecipes(Category $category, int $perPage = 12)
     {
         return $category->load(['recipes' => function ($query) use ($perPage) {
@@ -58,6 +76,9 @@ class CategoryService
         }]);
     }
 
+    /**
+     * Search categories.
+     */
     public function search(string $search)
     {
         return Category::where('name', 'like', "%{$search}%")
@@ -66,6 +87,9 @@ class CategoryService
                       ->get();
     }
 
+    /**
+     * Get popular categories.
+     */
     public function getPopular(int $limit = 10)
     {
         return Category::withCount('recipes')
@@ -74,14 +98,11 @@ class CategoryService
                       ->get();
     }
 
+    /**
+     * Get category by slug.
+     */
     public function findBySlug(string $slug): ?Category
     {
         return Category::where('slug', $slug)->first();
     }
-    
-}
-
-
-
-
-?>
+} 

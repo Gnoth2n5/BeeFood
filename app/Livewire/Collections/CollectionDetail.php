@@ -107,6 +107,7 @@ class CollectionDetail extends Component
         session()->flash('success', 'Cập nhật bộ sưu tập thành công!');
         $this->dispatch('flash-message', message: 'Cập nhật bộ sưu tập thành công!', type: 'success');
     }
+
     public function removeRecipe($recipeId)
     {
         if (!$this->isOwner) {
@@ -171,4 +172,4 @@ class CollectionDetail extends Component
             'recipes' => $this->recipes,
         ]);
     }
-}
+} 

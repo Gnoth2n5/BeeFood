@@ -50,8 +50,8 @@ class TagService
     public function getAllWithRecipeCount()
     {
         return Tag::withCount('recipes')
-            ->orderBy('name')
-            ->get();
+                 ->orderBy('name')
+                 ->get();
     }
 
     /**
@@ -60,8 +60,8 @@ class TagService
     public function getForSelect()
     {
         return Tag::select('id', 'name')
-            ->orderBy('name')
-            ->get();
+                 ->orderBy('name')
+                 ->get();
     }
 
     /**
@@ -69,13 +69,11 @@ class TagService
      */
     public function getWithRecipes(Tag $tag, int $perPage = 12)
     {
-        return $tag->load([
-            'recipes' => function ($query) use ($perPage) {
-                $query->with(['user', 'categories', 'tags'])
-                    ->orderBy('created_at', 'desc')
-                    ->paginate($perPage);
-            }
-        ]);
+        return $tag->load(['recipes' => function ($query) use ($perPage) {
+            $query->with(['user', 'categories', 'tags'])
+                  ->orderBy('created_at', 'desc')
+                  ->paginate($perPage);
+        }]);
     }
 
     /**
@@ -84,9 +82,9 @@ class TagService
     public function search(string $search)
     {
         return Tag::where('name', 'like', "%{$search}%")
-            ->withCount('recipes')
-            ->orderBy('name')
-            ->get();
+                 ->withCount('recipes')
+                 ->orderBy('name')
+                 ->get();
     }
 
     /**
@@ -95,9 +93,9 @@ class TagService
     public function getPopular(int $limit = 20)
     {
         return Tag::withCount('recipes')
-            ->orderBy('recipes_count', 'desc')
-            ->limit($limit)
-            ->get();
+                 ->orderBy('recipes_count', 'desc')
+                 ->limit($limit)
+                 ->get();
     }
 
     /**
@@ -114,17 +112,16 @@ class TagService
     public function createOrFindByNames(array $names): array
     {
         $tags = [];
-
+        
         foreach ($names as $name) {
             $name = trim($name);
-            if (empty($name))
-                continue;
+            if (empty($name)) continue;
 
             $tag = Tag::firstOrCreate(
                 ['name' => $name],
                 ['slug' => Str::slug($name)]
             );
-
+            
             $tags[] = $tag;
         }
 
@@ -137,9 +134,9 @@ class TagService
     public function getForAutocomplete(string $search, int $limit = 10)
     {
         return Tag::where('name', 'like', "%{$search}%")
-            ->select('id', 'name')
-            ->orderBy('name')
-            ->limit($limit)
-            ->get();
+                 ->select('id', 'name')
+                 ->orderBy('name')
+                 ->limit($limit)
+                 ->get();
     }
-}
+} 

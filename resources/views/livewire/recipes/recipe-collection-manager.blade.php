@@ -1,5 +1,5 @@
 <div>
-    
+    <!-- Nút "Thêm vào bộ sưu tập" -->
     <button 
         wire:click="openModal"
         class="bg-white border border-orange-500 text-orange-600 px-5 py-2 rounded-lg font-semibold hover:bg-orange-50 transition flex items-center gap-2"
@@ -9,7 +9,7 @@
         Thêm vào bộ sưu tập
     </button>
 
-    
+    <!-- Modal chọn bộ sưu tập -->
     @if($showModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" wire:click="closeModal">
             <div class="bg-white rounded-xl shadow-lg p-6 w-96 max-w-full mx-4" wire:click.stop>
@@ -100,7 +100,7 @@
         </div>
     @endif
 
-    
+    <!-- Modal tạo bộ sưu tập mới -->
     @if($showCreateModal)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" wire:click="closeCreateModal">
             <div class="bg-white rounded-xl shadow-lg p-6 w-96 max-w-full mx-4" wire:click.stop>

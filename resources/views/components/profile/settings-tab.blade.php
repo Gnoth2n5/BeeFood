@@ -3,9 +3,9 @@
 <div class="max-w-4xl mx-auto">
     <form wire:submit.prevent="saveProfile" class="">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
+            <!-- Cột trái: Thông tin cơ bản + Địa chỉ -->
             <div class="space-y-6">
-                
+                <!-- Thông tin cơ bản -->
                 <div class="bg-white rounded-lg border border-gray-200 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Thông tin cơ bản</h3>
                     <div class="grid grid-cols-1 gap-4">
@@ -40,7 +40,7 @@
                         </div>
                     </div>
                 </div>
-                
+                <!-- Địa chỉ -->
                 <div class="bg-white rounded-lg border border-gray-200 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Địa chỉ</h3>
                     <div class="grid grid-cols-1 gap-4">
@@ -62,9 +62,9 @@
                     </div>
                 </div>
             </div>
-            
+            <!-- Cột phải: Sở thích ăn uống + Dị ứng & Sức khỏe -->
             <div class="space-y-6">
-                
+                <!-- Sở thích ăn uống -->
                 <div class="bg-white rounded-lg border border-gray-200 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Sở thích ăn uống</h3>
                     <div class="grid grid-cols-2 gap-3">
@@ -77,7 +77,7 @@
                     </div>
                     @error('dietary_preferences') <span class="text-red-500 text-sm mt-2 block">{{ $message }}</span> @enderror
                 </div>
-                
+                <!-- Dị ứng & Sức khỏe -->
                 <div class="bg-white rounded-lg border border-gray-200 p-6">
                     <h3 class="text-lg font-semibold text-gray-900 mb-4">Dị ứng & Sức khỏe</h3>
                     <div class="space-y-4">

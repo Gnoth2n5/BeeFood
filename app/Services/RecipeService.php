@@ -15,14 +15,20 @@ class RecipeService
      */
     public function create(array $data, User $user): Recipe
     {
-        $recipe = new Recipe($data);
+        // Xử lý dữ liệu trước khi tạo
+        $recipeData = $this->prepareRecipeData($data);
+        
+        $recipe = new Recipe($recipeData);
         $recipe->user_id = $user->id;
         $recipe->slug = Str::slug($data['title']);
-        $recipe->status = 'pending';
+        $recipe->status = $data['status'] ?? 'pending';
         $recipe->save();
 
         // Attach categories and tags
-        $recipe->categories()->attach($data['category_ids']);
+        if (!empty($data['category_ids'])) {
+            $recipe->categories()->attach($data['category_ids']);
+        }
+        
         if (!empty($data['tag_ids'])) {
             $recipe->tags()->attach($data['tag_ids']);
         }
@@ -40,14 +46,22 @@ class RecipeService
      */
     public function update(Recipe $recipe, array $data): Recipe
     {
-        $recipe->update($data);
+        // Xử lý dữ liệu trước khi cập nhật
+        $recipeData = $this->prepareRecipeData($data);
+        
+        $recipe->update($recipeData);
         $recipe->slug = Str::slug($data['title']);
-        $recipe->status = 'pending';
+        $recipe->status = $data['status'] ?? 'pending';
         $recipe->save();
 
         // Sync categories and tags
-        $recipe->categories()->sync($data['category_ids']);
-        $recipe->tags()->sync($data['tag_ids'] ?? []);
+        if (isset($data['category_ids'])) {
+            $recipe->categories()->sync($data['category_ids']);
+        }
+        
+        if (isset($data['tag_ids'])) {
+            $recipe->tags()->sync($data['tag_ids']);
+        }
 
         // Handle featured image
         if (isset($data['featured_image']) && $data['featured_image'] instanceof UploadedFile) {
@@ -155,6 +169,33 @@ class RecipeService
             $this->applySearchFilter($query, $filters['search']);
         }
 
+        // Tags filter
+        if (!empty($filters['tags']) && is_array($filters['tags'])) {
+            $query->whereHas('tags', function ($q) use ($filters) {
+                $q->whereIn('id', $filters['tags']);
+            });
+        }
+
+        // Min rating filter
+        if (!empty($filters['min_rating'])) {
+            $query->where('average_rating', '>=', $filters['min_rating']);
+        }
+
+        // Max calories filter
+        if (!empty($filters['max_calories'])) {
+            $query->where('calories', '<=', $filters['max_calories']);
+        }
+
+        // Servings filter
+        if (!empty($filters['servings'])) {
+            $query->where('servings', $filters['servings']);
+        }
+
+        // Price range filter (placeholder for future implementation)
+        if (!empty($filters['price_range'])) {
+            // TODO: Implement price range filter when price field is added
+        }
+
         // Sort
         $this->applySorting($query, $filters['sort'] ?? 'latest');
     }
@@ -201,6 +242,12 @@ class RecipeService
             case 'rating':
                 $query->orderBy('average_rating', 'desc');
                 break;
+            case 'cooking_time':
+                $query->orderBy('cooking_time', 'asc');
+                break;
+            case 'title':
+                $query->orderBy('title', 'asc');
+                break;
             case 'oldest':
                 $query->orderBy('created_at', 'asc');
                 break;
@@ -229,5 +276,42 @@ class RecipeService
     public function incrementViewCount(Recipe $recipe): void
     {
         $recipe->increment('view_count');
+    }
+
+    /**
+     * Prepare recipe data for saving.
+     */
+    protected function prepareRecipeData(array $data): array
+    {
+        $recipeData = $data;
+
+        // Xử lý ingredients
+        if (isset($data['ingredients']) && is_array($data['ingredients'])) {
+            $recipeData['ingredients'] = array_values(array_filter($data['ingredients'], function ($item) {
+                return !empty($item['name']) && !empty($item['amount']);
+            }));
+        }
+
+        // Xử lý instructions
+        if (isset($data['instructions']) && is_array($data['instructions'])) {
+            $recipeData['instructions'] = array_values(array_filter($data['instructions'], function ($item) {
+                return !empty($item['instruction']);
+            }));
+            
+            // Đánh số lại các bước
+            foreach ($recipeData['instructions'] as $index => &$instruction) {
+                $instruction['step'] = $index + 1;
+            }
+        }
+
+        // Tính toán total_time
+        $cookingTime = $data['cooking_time'] ?? 0;
+        $preparationTime = $data['preparation_time'] ?? 0;
+        $recipeData['total_time'] = $cookingTime + $preparationTime;
+
+        // Loại bỏ các trường không cần thiết
+        unset($recipeData['category_ids'], $recipeData['tag_ids']);
+
+        return $recipeData;
     }
 } 

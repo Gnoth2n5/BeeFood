@@ -15,11 +15,14 @@ use Illuminate\View\View;
 class CategoryController extends Controller
 {
     use AuthorizesRequests;
-    
+
     public function __construct(
         private CategoryService $categoryService
     ) {}
 
+    /**
+     * Display a listing of the resource.
+     */
     public function index(): View
     {
         $categories = $this->categoryService->getAllWithRecipeCount();
@@ -27,6 +30,9 @@ class CategoryController extends Controller
         return view('categories.index', compact('categories'));
     }
 
+    /**
+     * Show the form for creating a new resource.
+     */
     public function create(): View
     {
         $this->authorize('create', Category::class);
@@ -34,6 +40,9 @@ class CategoryController extends Controller
         return view('categories.create');
     }
 
+    /**
+     * Store a newly created resource in storage.
+     */
     public function store(Request $request): RedirectResponse
     {
         $validated = $request->validate([
@@ -52,6 +61,9 @@ class CategoryController extends Controller
                         ->with('success', 'Danh mục đã được tạo thành công.');
     }
 
+    /**
+     * Display the specified resource.
+     */
     public function show(Category $category): View
     {
         $category = $this->categoryService->getWithRecipes($category);
@@ -59,6 +71,9 @@ class CategoryController extends Controller
         return view('categories.show', compact('category'));
     }
 
+    /**
+     * Show the form for editing the specified resource.
+     */
     public function edit(Category $category): View
     {
         $this->authorize('update', $category);
@@ -66,6 +81,9 @@ class CategoryController extends Controller
         return view('categories.edit', compact('category'));
     }
 
+    /**
+     * Update the specified resource in storage.
+     */
     public function update(Request $request, Category $category): RedirectResponse
     {
         $validated = $request->validate([
@@ -84,6 +102,9 @@ class CategoryController extends Controller
                         ->with('success', 'Danh mục đã được cập nhật thành công.');
     }
 
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(Category $category): RedirectResponse
     {
         $this->authorize('delete', $category);
@@ -99,6 +120,9 @@ class CategoryController extends Controller
                         ->with('error', 'Không thể xóa danh mục có chứa công thức.');
     }
 
+    /**
+     * Get categories for select dropdown.
+     */
     public function getForSelect(): JsonResponse
     {
         $categories = $this->categoryService->getForSelect();
@@ -106,6 +130,9 @@ class CategoryController extends Controller
         return response()->json($categories);
     }
 
+    /**
+     * Search categories.
+     */
     public function search(Request $request): JsonResponse
     {
         $search = $request->get('q', '');
@@ -114,16 +141,13 @@ class CategoryController extends Controller
         return response()->json($categories);
     }
 
+    /**
+     * Get popular categories.
+     */
     public function popular(): JsonResponse
     {
         $categories = $this->categoryService->getPopular();
 
         return response()->json($categories);
     }
-
-    
-}
-
-
-
-?>
+} 

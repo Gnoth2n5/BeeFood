@@ -16,13 +16,13 @@ class RecipeCollectionManager extends Component
     public $showCreateModal = false;
     public $collections = [];
     public $selectedCollectionId = null;
-
+    
     #[Rule('required|string|max:255')]
     public $newCollectionName = '';
-
+    
     #[Rule('nullable|string|max:1000')]
     public $newCollectionDescription = '';
-
+    
     public $newCollectionIsPublic = false;
 
     public function mount(Recipe $recipe)
@@ -222,7 +222,4 @@ class RecipeCollectionManager extends Component
             return view('livewire.recipes.recipe-collection-manager');
         }
     }
-}
-
-
-?>
+} 

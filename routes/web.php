@@ -5,7 +5,7 @@ use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\RatingController;
-use App\Http\Controllers\FavoriteController;
+
 use App\Http\Controllers\CollectionController;
 use App\Livewire\HomePage;
 use App\Livewire\Recipes\RecipeDetail;
@@ -16,12 +16,12 @@ Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::view('profile', 'profile')
+Route::get('profile', App\Livewire\Profile\ProfilePage::class)
     ->middleware(['auth'])
     ->name('profile');
 
 // Recipe routes
-Route::get('/recipes', [RecipeController::class, 'index'])->name('recipes.index');
+Route::get('/recipes', App\Livewire\Recipes\RecipeList::class)->name('recipes.index');
 Route::get('/recipes/{recipe}', RecipeDetail::class)->name('recipes.show');
 
 // Protected routes
@@ -42,11 +42,11 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/recipes/{recipe}/rate', [RatingController::class, 'destroy'])->name('recipes.rate.destroy');
 
     // Favorites
-    Route::post('/recipes/{recipe}/favorite', [FavoriteController::class, 'toggle'])->name('recipes.favorite');
-    Route::get('/favorites', [FavoriteController::class, 'index'])->name('favorites.index');
+    Route::get('/favorites', App\Livewire\Favorites\FavoritesPage::class)->name('favorites.index');
 
     // Collections
-    Route::resource('collections', CollectionController::class);
+    Route::get('/collections/{collection}', \App\Livewire\Collections\CollectionDetail::class)->name('collections.show');
+    Route::resource('collections', CollectionController::class)->except(['show']);
     Route::post('/collections/{collection}/recipes/{recipe}', [CollectionController::class, 'addRecipe'])->name('collections.add-recipe');
     Route::delete('/collections/{collection}/recipes/{recipe}', [CollectionController::class, 'removeRecipe'])->name('collections.remove-recipe');
 });
@@ -57,8 +57,6 @@ Route::middleware(['auth', 'role:admin|manager'])->prefix('admin')->name('admin.
     Route::post('/recipes/{recipe}/approve', [RecipeController::class, 'approve'])->name('recipes.approve');
     Route::post('/recipes/{recipe}/reject', [RecipeController::class, 'reject'])->name('recipes.reject');
     
-    Route::resource('categories', CategoryController::class);
-    Route::resource('tags', TagController::class);
 });
 
 require __DIR__.'/auth.php';

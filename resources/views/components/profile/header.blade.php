@@ -48,7 +48,8 @@
                     @endif
                 @endif
             </div>
-            
+
+            <!-- Basic Info -->
             <div class="flex-1">
                 <div class="flex items-center space-x-3 mb-2">
                     <h1 class="text-3xl sm:text-4xl font-bold text-gray-900">{{ $user->name }}</h1>
@@ -86,7 +87,8 @@
                 </div>
             </div>
         </div>
-        
+
+        <!-- Action Buttons -->
         <div class="flex items-center space-x-3 mt-4 sm:mt-0">
             @if($isEditing)
                 <button wire:click="saveProfile" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
@@ -102,4 +104,4 @@
             @endif
         </div>
     </div>
-</div>         
+</div> 
