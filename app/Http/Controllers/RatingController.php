@@ -14,8 +14,7 @@ class RatingController extends Controller
 {
     public function __construct(
         private RatingService $ratingService
-    ) {
-    }
+    ) {}
 
     /**
      * Store a newly created rating.
@@ -59,11 +58,11 @@ class RatingController extends Controller
 
         if (!$rating) {
             $message = 'Không tìm thấy đánh giá.';
-
+            
             if ($request->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 404);
             }
-
+            
             return back()->with('error', $message);
         }
 
@@ -93,11 +92,11 @@ class RatingController extends Controller
 
         if (!$rating) {
             $message = 'Không tìm thấy đánh giá.';
-
+            
             if (request()->wantsJson()) {
                 return response()->json(['success' => false, 'message' => $message], 404);
             }
-
+            
             return back()->with('error', $message);
         }
 
@@ -136,4 +135,4 @@ class RatingController extends Controller
 
         return response()->json($stats);
     }
-}
+} 

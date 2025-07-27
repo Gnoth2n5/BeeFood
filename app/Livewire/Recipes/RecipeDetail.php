@@ -34,7 +34,7 @@ class RecipeDetail extends Component
         session()->flash('success', $result['message']);
         $this->dispatch('flash-message', message: $result['message'], type: 'success');
     }
-    
+
     public function confirmToggleFavorite()
     {
         if (!Auth::check()) {
@@ -62,7 +62,4 @@ class RecipeDetail extends Component
             'recipe' => $this->recipe,
         ]);
     }
-}
-
-
-?>
+} 

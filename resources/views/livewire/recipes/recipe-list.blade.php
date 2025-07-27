@@ -8,7 +8,7 @@
                     <p class="text-sm text-gray-600 mt-1">Khám phá hàng nghìn công thức nấu ăn ngon</p>
                 </div>
                 
-                
+                <!-- View Mode Toggle -->
                 <div class="flex items-center space-x-2">
                     <button 
                         wire:click="toggleViewMode"
@@ -32,7 +32,7 @@
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="flex gap-6">
-            
+            <!-- Sidebar Filters -->
             <div class="w-80 flex-shrink-0">
                 <x-recipe-filters 
                     :categories="$categories" 
@@ -41,9 +41,9 @@
                 />
             </div>
 
-            
+            <!-- Main Content -->
             <div class="flex-1">
-                
+                <!-- Results Header -->
                 <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center space-x-4">
@@ -57,7 +57,7 @@
                             @endif
                         </div>
                         
-                        
+                        <!-- Active Filters Display -->
                         <x-active-filters 
                             :filters="[
                                 'search' => $search,
@@ -74,7 +74,7 @@
                     </div>
                 </div>
 
-                
+                <!-- Recipes Grid/List -->
                 @if($recipes->count() > 0)
                     <div class="{{ $viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6' : 'space-y-4' }}">
                         @foreach($recipes as $recipe)
@@ -86,12 +86,12 @@
                         @endforeach
                     </div>
 
-                    
+                    <!-- Pagination -->
                     <div class="mt-8">
                         {{ $recipes->links() }}
                     </div>
                 @else
-                    
+                    <!-- Empty State -->
                     <x-empty-state 
                         title="Không tìm thấy công thức"
                         description="Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác."

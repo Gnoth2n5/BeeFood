@@ -25,4 +25,3 @@ class CreateUserRecipe extends CreateRecord
         return $recipeService->create($data, $user);
     }
 } 
-?>

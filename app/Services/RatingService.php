@@ -71,7 +71,8 @@ class RatingService
                     ->where('recipe_id', $recipe->id)
                     ->first();
     }
-       /**
+
+    /**
      * Get average rating for a recipe.
      */
     public function getAverageRating(Recipe $recipe): float

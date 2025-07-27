@@ -8,7 +8,9 @@ use App\Models\User;
 
 class FavoriteService
 {
-   
+    /**
+     * Toggle favorite status for a recipe.
+     */
     public function toggle(Recipe $recipe, User $user): array
     {
         $favorite = Favorite::where('user_id', $user->id)
@@ -37,16 +39,20 @@ class FavoriteService
         ];
     }
 
-    
+    /**
+     * Get user's favorite recipes.
+     */
     public function getUserFavorites(User $user, int $perPage = 12)
     {
         return Favorite::where('user_id', $user->id)
-                      ->with(['recipe.user', 'recipe.categories', 'recipe.tags'])
+                      ->with(['recipe.user.profile', 'recipe.categories', 'recipe.tags', 'recipe.images'])
                       ->orderBy('created_at', 'desc')
                       ->paginate($perPage);
     }
 
-    
+    /**
+     * Check if user has favorited a recipe.
+     */
     public function isFavorited(Recipe $recipe, User $user): bool
     {
         return Favorite::where('user_id', $user->id)
@@ -54,20 +60,26 @@ class FavoriteService
                       ->exists();
     }
 
-    
+    /**
+     * Get favorite count for a recipe.
+     */
     public function getFavoriteCount(Recipe $recipe): int
     {
         return $recipe->favorites()->count();
     }
 
-   
+    /**
+     * Get user's favorite count.
+     */
     public function getUserFavoriteCount(User $user): int
     {
         return Favorite::where('user_id', $user->id)->count();
     }
 
-   
-     public function removeFavorite(Recipe $recipe, User $user): bool
+    /**
+     * Remove favorite.
+     */
+    public function removeFavorite(Recipe $recipe, User $user): bool
     {
         $favorite = Favorite::where('user_id', $user->id)
                            ->where('recipe_id', $recipe->id)

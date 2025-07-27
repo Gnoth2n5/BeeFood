@@ -20,9 +20,9 @@ class CategoryResource extends Resource
     protected static ?string $model = Category::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-
+    
     protected static ?string $navigationGroup = 'Quản lý nội dung';
-
+    
     protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
@@ -36,7 +36,7 @@ class CategoryResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn(string $state, callable $set) => $set('slug', Str::slug($state))),
+                            ->afterStateUpdated(fn (string $state, callable $set) => $set('slug', Str::slug($state))),
                         Forms\Components\TextInput::make('icon')
                             ->label('Icon Heroicon (ví dụ: heroicon-o-bookmark)')
                             ->maxLength(100),
@@ -58,11 +58,11 @@ class CategoryResource extends Resource
                             ->columnSpanFull(),
                         Forms\Components\Select::make('parent_id')
                             ->label('Danh mục cha')
-                            ->options(fn() => \App\Models\Category::pluck('name', 'id')->toArray())
+                            ->options(fn () => \App\Models\Category::pluck('name', 'id')->toArray())
                             ->searchable()
                             ->preload()
                             ->placeholder('Không có')
-                            ->disableOptionWhen(fn($value, $get) => $value == $get('id')),
+                            ->disableOptionWhen(fn ($value, $get) => $value == $get('id')),
                         Forms\Components\Toggle::make('is_active')
                             ->label('Kích hoạt')
                             ->default(true),
@@ -73,6 +73,7 @@ class CategoryResource extends Resource
                     ])->columns(2),
             ]);
     }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -121,8 +122,8 @@ class CategoryResource extends Resource
                     Tables\Actions\Action::make('toggle_status')
                         ->label('Chuyển trạng thái')
                         ->icon('heroicon-o-arrow-path')
-                        ->action(fn(Category $record) => $record->update(['is_active' => !$record->is_active]))
-                        ->color(fn(Category $record) => $record->is_active ? 'warning' : 'success'),
+                        ->action(fn (Category $record) => $record->update(['is_active' => !$record->is_active]))
+                        ->color(fn (Category $record) => $record->is_active ? 'warning' : 'success'),
                 ]),
             ])
             ->bulkActions([
@@ -131,12 +132,12 @@ class CategoryResource extends Resource
                         ->label('Kích hoạt')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => true])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_active' => true])),
                     Tables\Actions\BulkAction::make('deactivate')
                         ->label('Tắt kích hoạt')
                         ->icon('heroicon-o-x-circle')
                         ->color('danger')
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
+                        ->action(fn (Collection $records) => $records->each->update(['is_active' => false])),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
@@ -158,5 +159,4 @@ class CategoryResource extends Resource
             'edit' => Pages\EditCategory::route('/{record}/edit'),
         ];
     }
-
 }
