@@ -10,17 +10,28 @@ class UserDashboard extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-home';
     protected static string $view = 'filament.user-pages.dashboard';
+
+    protected function getHeaderWidgets(): array
+    {
+        return [
+            \App\Filament\UserWidgets\UserWelcomeHeaderWidget::class,
+            \App\Filament\UserWidgets\UserPersonalStats::class,
+        ];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            \App\Filament\UserWidgets\UserRecentRecipesWidget::class,
+            \App\Filament\UserWidgets\UserRecipeStatusChart::class,
+            \App\Filament\UserWidgets\UserRatingChart::class,
+        ];
+    }
     protected static ?string $title = 'Bảng điều khiển';
     protected static ?string $navigationLabel = 'Bảng điều khiển';
     protected static ?int $navigationSort = 0;
 
-    public $totalRecipes = 0;
-    public $latestRecipe = null;
 
-    public function mount()
-    {
-        $user = Auth::user();
-        $this->totalRecipes = Recipe::where('user_id', $user->id)->count();
-        $this->latestRecipe = Recipe::where('user_id', $user->id)->latest()->first();
-    }
-} 
+
+
+}

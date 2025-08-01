@@ -7,10 +7,20 @@ use App\Http\Controllers\TagController;
 use App\Http\Controllers\RatingController;
 
 use App\Http\Controllers\CollectionController;
+use App\Http\Controllers\PostController;
+use App\Http\Controllers\AdminLogoutController;
 use App\Livewire\HomePage;
 use App\Livewire\Recipes\RecipeDetail;
 
 Route::get('/', HomePage::class)->name('home');
+
+
+
+// Post routes
+Route::get('/posts', [PostController::class, 'index'])->name('posts.index');
+Route::get('/posts/{slug}', [PostController::class, 'show'])->name('posts.show');
+
+
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
@@ -23,6 +33,21 @@ Route::get('profile', App\Livewire\Profile\ProfilePage::class)
 // Recipe routes
 Route::get('/recipes', App\Livewire\Recipes\RecipeList::class)->name('recipes.index');
 Route::get('/recipes/{recipe}', RecipeDetail::class)->name('recipes.show');
+
+// Weather-based recipe suggestions
+Route::get('/weather-suggestions', App\Livewire\WeatherRecipeSuggestions::class)->name('weather.suggestions');
+
+// Vietnam Provinces API
+Route::prefix('api/vietnam-provinces')->name('api.vietnam-provinces.')->group(function () {
+    Route::get('/', [App\Http\Controllers\VietnamProvinceController::class, 'index'])->name('index');
+    Route::get('/stats', [App\Http\Controllers\VietnamProvinceController::class, 'stats'])->name('stats');
+    Route::get('/health', [App\Http\Controllers\VietnamProvinceController::class, 'health'])->name('health');
+    Route::get('/search', [App\Http\Controllers\VietnamProvinceController::class, 'search'])->name('search');
+    Route::get('/{code}', [App\Http\Controllers\VietnamProvinceController::class, 'show'])->name('show');
+    Route::get('/{provinceCode}/districts', [App\Http\Controllers\VietnamProvinceController::class, 'districts'])->name('districts');
+    Route::get('/districts/{districtCode}/wards', [App\Http\Controllers\VietnamProvinceController::class, 'wards'])->name('wards');
+    Route::delete('/cache', [App\Http\Controllers\VietnamProvinceController::class, 'clearCache'])->name('clear-cache');
+});
 
 // Protected routes
 Route::middleware(['auth'])->group(function () {
@@ -52,11 +77,24 @@ Route::middleware(['auth'])->group(function () {
 });
 
 // Admin routes
-Route::middleware(['auth', 'role:admin|manager'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', 'can:approve,App\Models\Recipe'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/recipes/pending', [RecipeController::class, 'pending'])->name('recipes.pending');
     Route::post('/recipes/{recipe}/approve', [RecipeController::class, 'approve'])->name('recipes.approve');
     Route::post('/recipes/{recipe}/reject', [RecipeController::class, 'reject'])->name('recipes.reject');
-    
+    Route::get('/moderation-test', \App\Livewire\Admin\ModerationTest::class)->name('moderation.test');
+    Route::get('/scheduled-posts', \App\Livewire\Admin\ScheduledPosts::class)->name('scheduled-posts');
+    Route::get('/pending-posts', \App\Livewire\Admin\PendingPosts::class)->name('pending-posts');
 });
 
-require __DIR__.'/auth.php';
+// Admin logout route
+Route::post('/admin/logout', [AdminLogoutController::class, 'logout'])->name('admin.logout');
+
+// Filament admin logout route
+Route::post('/admin/logout', [AdminLogoutController::class, 'logout'])->name('filament.admin.auth.logout');
+
+// Filament user logout route
+Route::post('/user/logout', [AdminLogoutController::class, 'logout'])->name('filament.user.auth.logout');
+
+
+
+require __DIR__ . '/auth.php';

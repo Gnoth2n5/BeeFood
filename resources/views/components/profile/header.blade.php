@@ -1,4 +1,4 @@
-@props(['user', 'profile', 'isEditing', 'avatar', 'experienceOptions'])
+@props(['user', 'profile', 'isEditing', 'avatar', 'experienceOptions', 'nearestCity'])
 
 <div class="relative p-6 sm:p-8">
     <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between">
@@ -18,8 +18,8 @@
                 <div class="w-32 h-32 sm:w-40 sm:h-40 rounded-full border-4 border-white shadow-lg overflow-hidden bg-gradient-to-br from-orange-100 to-red-100">
                     @if($isEditing && $avatar)
                         <img src="{{ $avatar->temporaryUrl() }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
-                    @elseif($user->avatar)
-                        <img src="{{ Storage::url($user->avatar) }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
+                    @elseif($user->hasAvatar())
+                        <img src="{{ $user->getAvatarUrl() }}" alt="{{ $user->name }}" class="w-full h-full object-cover">
                     @else
                         <div class="w-full h-full flex items-center justify-center">
                             <x-heroicon-o-user class="w-16 h-16 text-orange-400" />
@@ -33,7 +33,7 @@
                         <input wire:model.live="avatar" type="file" id="avatar" class="hidden" accept="image/*">
                     </label>
                     
-                    @if($user->avatar)
+                    @if($user->hasLocalAvatar())
                         <button wire:click="removeAvatar" type="button" class="absolute top-0 right-0 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 cursor-pointer shadow-lg transition-colors" title="Xóa ảnh đại diện">
                             <x-heroicon-o-x-mark class="w-4 h-4" />
                         </button>
@@ -100,6 +100,17 @@
             @else
                 <button wire:click="toggleEdit" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
                     Chỉnh sửa hồ sơ
+                </button>
+            @endif
+            
+            <!-- Nút lấy vị trí -->
+            @if(!$nearestCity)
+                <button wire:click="getUserLocationFromBrowser" 
+                        class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm font-medium rounded-lg transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
+                    </svg>
+                    Lấy vị trí của tôi
                 </button>
             @endif
         </div>

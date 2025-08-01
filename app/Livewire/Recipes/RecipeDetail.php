@@ -15,7 +15,7 @@ class RecipeDetail extends Component
 
     public function mount(Recipe $recipe)
     {
-        $this->recipe = $recipe->load(['user.profile', 'categories', 'tags', 'images', 'ratings.user']);
+        $this->recipe = $recipe->load(['user.profile', 'categories', 'tags', 'images', 'ratings.user', 'favorites']);
         $this->recipe->incrementViewCount();
     }
 
@@ -28,11 +28,14 @@ class RecipeDetail extends Component
 
         $favoriteService = app(FavoriteService::class);
         $result = $favoriteService->toggle($this->recipe, Auth::user());
-        
+
         $this->recipe->refresh();
-        
+
         session()->flash('success', $result['message']);
         $this->dispatch('flash-message', message: $result['message'], type: 'success');
+
+        // Refresh component để cập nhật UI
+        $this->dispatch('$refresh');
     }
 
     public function confirmToggleFavorite()
@@ -43,9 +46,9 @@ class RecipeDetail extends Component
         }
 
         $isFavorited = $this->recipe->isFavoritedBy(Auth::user());
-        
+
         if ($isFavorited) {
-            $this->dispatch('confirm-remove-favorite', recipeSlug: $this->recipe->slug, componentId: $this->getId(), action: 'toggle');
+            $this->removeFavorite($this->recipe->slug);
         } else {
             $this->toggleFavorite();
         }
@@ -53,7 +56,22 @@ class RecipeDetail extends Component
 
     public function removeFavorite($recipeSlug)
     {
-        $this->toggleFavorite();
+        if (!Auth::check()) {
+            session()->flash('message', 'Vui lòng đăng nhập để thực hiện thao tác này.');
+            return;
+        }
+
+        $favoriteService = app(FavoriteService::class);
+        $favoriteService->removeFavorite($this->recipe, Auth::user());
+
+        $this->recipe->refresh();
+
+        session()->flash('success', 'Đã xóa khỏi danh sách yêu thích.');
+        $this->dispatch('favorite-toggled', recipeId: $this->recipe->id);
+        $this->dispatch('flash-message', message: 'Đã xóa khỏi danh sách yêu thích.', type: 'success');
+
+        // Refresh component để cập nhật UI
+        $this->dispatch('$refresh');
     }
 
     public function render()
@@ -62,4 +80,4 @@ class RecipeDetail extends Component
             'recipe' => $this->recipe,
         ]);
     }
-} 
+}
