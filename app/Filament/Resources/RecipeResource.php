@@ -25,9 +25,9 @@ class RecipeResource extends Resource
     protected static ?string $model = Recipe::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cake';
-    
+
     protected static ?string $navigationGroup = 'Quản lý nội dung';
-    
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -46,7 +46,7 @@ class RecipeResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn (string $state, callable $set) => $set('slug', Str::slug($state))),
+                            ->afterStateUpdated(fn(string $state, callable $set) => $set('slug', Str::slug($state))),
                         Forms\Components\TextInput::make('slug')
                             ->label('Slug')
                             ->required()
@@ -62,7 +62,7 @@ class RecipeResource extends Resource
                             ->maxLength(500)
                             ->columnSpanFull(),
                     ])->columns(2),
-                
+
                 Forms\Components\Section::make('Chi tiết công thức')
                     ->schema([
                         Forms\Components\TextInput::make('cooking_time')
@@ -99,7 +99,7 @@ class RecipeResource extends Resource
                             ->numeric()
                             ->minValue(0),
                     ])->columns(3),
-                
+
                 Forms\Components\Section::make('Nguyên liệu')
                     ->schema([
                         Forms\Components\Repeater::make('ingredients')
@@ -125,9 +125,9 @@ class RecipeResource extends Resource
                             ->maxItems(50)
                             ->reorderable(false)
                             ->columnSpanFull()
-                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null),
+                            ->itemLabel(fn(array $state): ?string => $state['name'] ?? null),
                     ]),
-                
+
                 Forms\Components\Section::make('Hướng dẫn nấu ăn')
                     ->schema([
                         Forms\Components\Repeater::make('instructions')
@@ -146,7 +146,7 @@ class RecipeResource extends Resource
                             ->reorderable(true)
                             ->columnSpanFull(),
                     ]),
-                
+
                 Forms\Components\Section::make('Mẹo và ghi chú')
                     ->schema([
                         Forms\Components\Textarea::make('tips')
@@ -160,7 +160,7 @@ class RecipeResource extends Resource
                             ->rows(3)
                             ->columnSpanFull(),
                     ]),
-                
+
                 Forms\Components\Section::make('Media')
                     ->schema([
                         Forms\Components\FileUpload::make('featured_image')
@@ -174,24 +174,38 @@ class RecipeResource extends Resource
                             ->url()
                             ->maxLength(500),
                     ])->columns(2),
-                
+
                 Forms\Components\Section::make('Phân loại')
+                    ->description('Chọn danh mục và thẻ để phân loại công thức')
                     ->schema([
                         Forms\Components\Select::make('category_ids')
                             ->label('Danh mục')
                             ->multiple()
-                            ->options(Category::pluck('name', 'id'))
+                            ->options(function () {
+                                return Category::where('is_active', true)
+                                    ->orderBy('sort_order')
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
                             ->preload()
                             ->searchable()
-                            ->required(),
+                            ->required()
+                            ->helperText('Chọn một hoặc nhiều danh mục cho công thức')
+                            ->placeholder('Chọn danh mục...'),
                         Forms\Components\Select::make('tag_ids')
                             ->label('Thẻ')
                             ->multiple()
-                            ->options(Tag::pluck('name', 'id'))
+                            ->options(function () {
+                                return Tag::orderBy('usage_count', 'desc')
+                                    ->orderBy('name')
+                                    ->pluck('name', 'id');
+                            })
                             ->preload()
-                            ->searchable(),
+                            ->searchable()
+                            ->helperText('Chọn các thẻ phù hợp với công thức')
+                            ->placeholder('Chọn thẻ...'),
                     ])->columns(2),
-                
+
                 Forms\Components\Section::make('Trạng thái và phê duyệt')
                     ->schema([
                         Forms\Components\Select::make('status')
@@ -205,6 +219,16 @@ class RecipeResource extends Resource
                             ])
                             ->default('draft')
                             ->required(),
+                        Forms\Components\DateTimePicker::make('auto_approve_at')
+                            ->label('Tự động phê duyệt lúc')
+                            ->placeholder('Chọn thời gian tự động phê duyệt...')
+                            ->helperText('Nếu set thời gian, công thức sẽ tự động được phê duyệt khi đến thời gian này')
+                            ->visible(fn(string $context): bool => $context === 'edit'),
+                        Forms\Components\DateTimePicker::make('auto_reject_at')
+                            ->label('Tự động từ chối lúc')
+                            ->placeholder('Chọn thời gian tự động từ chối...')
+                            ->helperText('Nếu set thời gian, công thức sẽ tự động bị từ chối khi đến thời gian này')
+                            ->visible(fn(string $context): bool => $context === 'edit'),
                         Forms\Components\Select::make('approved_by')
                             ->label('Phê duyệt bởi')
                             ->options(User::whereHas('roles', function ($query) {
@@ -220,7 +244,7 @@ class RecipeResource extends Resource
                         Forms\Components\DateTimePicker::make('published_at')
                             ->label('Thời gian xuất bản'),
                     ])->columns(2),
-                
+
                 Forms\Components\Section::make('SEO')
                     ->schema([
                         Forms\Components\TextInput::make('meta_title')
@@ -259,11 +283,14 @@ class RecipeResource extends Resource
                     ->label('Danh mục')
                     ->badge()
                     ->separator(',')
-                    ->limit(2),
+                    ->limit(3)
+                    ->tooltip(function ($record) {
+                        return $record->categories->pluck('name')->implode(', ');
+                    }),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Trạng thái')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'draft' => 'gray',
                         'pending' => 'warning',
                         'approved' => 'success',
@@ -274,7 +301,7 @@ class RecipeResource extends Resource
                 Tables\Columns\TextColumn::make('difficulty')
                     ->label('Độ khó')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'easy' => 'success',
                         'medium' => 'warning',
                         'hard' => 'danger',
@@ -287,7 +314,7 @@ class RecipeResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('cooking_time')
                     ->label('Thời gian nấu')
-                    ->formatStateUsing(fn (int $state): string => $state . ' phút')
+                    ->formatStateUsing(fn(int $state): string => $state . ' phút')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('view_count')
                     ->label('Lượt xem')
@@ -303,6 +330,20 @@ class RecipeResource extends Resource
                     )
                     ->sortable()
                     ->toggleable(),
+                Tables\Columns\TextColumn::make('auto_approve_at')
+                    ->label('Tự động phê duyệt')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->color('warning')
+                    ->icon('heroicon-o-clock'),
+                Tables\Columns\TextColumn::make('auto_reject_at')
+                    ->label('Tự động từ chối')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->color('danger')
+                    ->icon('heroicon-o-clock'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Tạo lúc')
                     ->dateTime('d/m/Y H:i')
@@ -349,11 +390,11 @@ class RecipeResource extends Resource
                         return $query
                             ->when(
                                 $data['created_from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
                             )
                             ->when(
                                 $data['created_until'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                                fn(Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
                             );
                     }),
             ])
@@ -364,7 +405,8 @@ class RecipeResource extends Resource
                         ->icon('heroicon-o-eye'),
                     Tables\Actions\EditAction::make()
                         ->label('Sửa')
-                        ->icon('heroicon-o-pencil'),
+                        ->icon('heroicon-o-pencil')
+                        ->visible(fn(): bool => Auth::user()->hasRole(['admin', 'manager'])), // Admin và Manager được sửa
                     Tables\Actions\Action::make('approve')
                         ->label('Phê duyệt')
                         ->icon('heroicon-o-check-circle')
@@ -376,7 +418,7 @@ class RecipeResource extends Resource
                         ->action(function (Recipe $record) {
                             app(RecipeService::class)->approve($record, Auth::user());
                         })
-                        ->visible(fn (Recipe $record): bool => $record->status === 'pending'),
+                        ->visible(fn(Recipe $record): bool => $record->status === 'pending' && Auth::user()->hasRole(['admin', 'manager'])),
                     Tables\Actions\Action::make('reject')
                         ->label('Từ chối')
                         ->icon('heroicon-o-x-circle')
@@ -394,7 +436,7 @@ class RecipeResource extends Resource
                         ->action(function (Recipe $record, array $data) {
                             app(RecipeService::class)->reject($record, Auth::user(), $data['reason']);
                         })
-                        ->visible(fn (Recipe $record): bool => $record->status === 'pending'),
+                        ->visible(fn(Recipe $record): bool => $record->status === 'pending' && Auth::user()->hasRole(['admin', 'manager'])),
                     Tables\Actions\Action::make('publish')
                         ->label('Xuất bản')
                         ->icon('heroicon-o-globe-alt')
@@ -409,17 +451,90 @@ class RecipeResource extends Resource
                                 'published_at' => now(),
                             ]);
                         })
-                        ->visible(fn (Recipe $record): bool => $record->status === 'approved'),
+                        ->visible(fn(Recipe $record): bool => $record->status === 'approved' && Auth::user()->hasRole('admin')),
+                    Tables\Actions\Action::make('test_moderation')
+                        ->label('Test kiểm duyệt')
+                        ->icon('heroicon-o-shield-check')
+                        ->color('warning')
+                        ->modalHeading('Kết quả kiểm duyệt')
+                        ->modalContent(function (Recipe $record) {
+                            $moderationService = app(\App\Services\ModerationService::class);
+                            $results = $moderationService->testRecipeModeration($record);
+
+                            $violations = array_filter($results, fn($result) => $result['violated']);
+
+                            if (empty($violations)) {
+                                return view('filament.modals.moderation-test', [
+                                    'recipe' => $record,
+                                    'results' => $results,
+                                    'hasViolations' => false
+                                ]);
+                            }
+
+                            return view('filament.modals.moderation-test', [
+                                'recipe' => $record,
+                                'results' => $results,
+                                'violations' => $violations,
+                                'hasViolations' => true
+                            ]);
+                        })
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Đóng')
+                        ->visible(fn(Recipe $record): bool => Auth::user()->hasRole(['admin', 'manager'])),
+                    Tables\Actions\Action::make('set_auto_approve')
+                        ->label('Set lịch phê duyệt')
+                        ->icon('heroicon-o-clock')
+                        ->color('info')
+                        ->form([
+                            Forms\Components\DateTimePicker::make('auto_approve_at')
+                                ->label('Thời gian tự động phê duyệt')
+                                ->required()
+                                ->minDate(now())
+                                ->helperText('Công thức sẽ tự động được phê duyệt khi đến thời gian này'),
+                        ])
+                        ->modalHeading('Set lịch phê duyệt tự động')
+                        ->modalDescription('Chọn thời gian để công thức tự động được phê duyệt')
+                        ->modalSubmitActionLabel('Set lịch')
+                        ->action(function (Recipe $record, array $data) {
+                            $record->update([
+                                'auto_approve_at' => $data['auto_approve_at'],
+                                'status' => 'pending'
+                            ]);
+                        })
+                        ->visible(fn(Recipe $record): bool => $record->status === 'pending' && Auth::user()->hasRole(['admin', 'manager'])),
+                    Tables\Actions\Action::make('set_auto_reject')
+                        ->label('Set lịch từ chối')
+                        ->icon('heroicon-o-clock')
+                        ->color('danger')
+                        ->form([
+                            Forms\Components\DateTimePicker::make('auto_reject_at')
+                                ->label('Thời gian tự động từ chối')
+                                ->required()
+                                ->minDate(now())
+                                ->helperText('Công thức sẽ tự động bị từ chối khi đến thời gian này'),
+                        ])
+                        ->modalHeading('Set lịch từ chối tự động')
+                        ->modalDescription('Chọn thời gian để công thức tự động bị từ chối')
+                        ->modalSubmitActionLabel('Set lịch')
+                        ->action(function (Recipe $record, array $data) {
+                            $record->update([
+                                'auto_reject_at' => $data['auto_reject_at'],
+                                'status' => 'pending'
+                            ]);
+                        })
+                        ->visible(fn(Recipe $record): bool => $record->status === 'pending' && Auth::user()->hasRole(['admin', 'manager'])),
                     Tables\Actions\DeleteAction::make()
                         ->label('Xóa')
-                        ->icon('heroicon-o-trash'),
+                        ->icon('heroicon-o-trash')
+                        ->visible(fn(): bool => Auth::user()->hasRole('admin')), // Chỉ Admin mới được xóa
                 ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
                         ->label('Xóa đã chọn')
-                        ->icon('heroicon-o-trash'),
+                        ->icon('heroicon-o-trash')
+                        ->visible(fn(): bool => Auth::user()->hasRole('admin')), // Chỉ Admin mới được xóa hàng loạt
                     Tables\Actions\BulkAction::make('approve_selected')
                         ->label('Phê duyệt đã chọn')
                         ->icon('heroicon-o-check-circle')
@@ -439,7 +554,8 @@ class RecipeResource extends Resource
                                 }
                             }
                             return $count . ' công thức đã được phê duyệt.';
-                        }),
+                        })
+                        ->visible(fn(): bool => Auth::user()->hasRole(['admin', 'manager'])),
                     Tables\Actions\BulkAction::make('reject_selected')
                         ->label('Từ chối đã chọn')
                         ->icon('heroicon-o-x-circle')
@@ -449,11 +565,10 @@ class RecipeResource extends Resource
                                 ->label('Lý do từ chối')
                                 ->required()
                                 ->maxLength(500)
-                                ->placeholder('Nhập lý do từ chối các công thức...'),
+                                ->placeholder('Nhập lý do từ chối công thức...'),
                         ])
                         ->modalHeading('Từ chối công thức đã chọn')
-                        ->modalDescription('Vui lòng cung cấp lý do từ chối các công thức đã chọn.')
-                        ->modalSubmitActionLabel('Từ chối')
+                        ->modalDescription('Vui lòng cung cấp lý do từ chối tất cả công thức đã chọn.')
                         ->action(function (Collection $records, array $data) {
                             $service = app(RecipeService::class);
                             $user = Auth::user();
@@ -464,8 +579,89 @@ class RecipeResource extends Resource
                                     $count++;
                                 }
                             }
-                            return $count . ' công thức đã được từ chối.';
-                        }),
+                            return $count . ' công thức đã bị từ chối.';
+                        })
+                        ->visible(fn(): bool => Auth::user()->hasRole(['admin', 'manager'])),
+                    Tables\Actions\BulkAction::make('auto_moderate_selected')
+                        ->label('Kiểm duyệt tự động đã chọn')
+                        ->icon('heroicon-o-shield-check')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading('Kiểm duyệt tự động công thức đã chọn')
+                        ->modalDescription('Hệ thống sẽ tự động kiểm tra và phê duyệt/từ chối các công thức đã chọn dựa trên quy tắc kiểm duyệt.')
+                        ->modalSubmitActionLabel('Thực hiện kiểm duyệt')
+                        ->action(function (Collection $records) {
+                            $moderationService = app(\App\Services\ModerationService::class);
+                            $count = 0;
+                            $results = ['approved' => 0, 'rejected' => 0, 'flagged' => 0];
+
+                            foreach ($records as $record) {
+                                if ($record->status === 'pending') {
+                                    $result = $moderationService->moderateRecipe($record);
+                                    $results[$result['action']]++;
+                                    $count++;
+                                }
+                            }
+
+                            return "Đã kiểm duyệt {$count} công thức: {$results['approved']} phê duyệt, {$results['rejected']} từ chối, {$results['flagged']} đánh dấu.";
+                        })
+                        ->visible(fn(): bool => Auth::user()->hasRole(['admin', 'manager'])),
+                    Tables\Actions\BulkAction::make('set_auto_approve_selected')
+                        ->label('Set lịch phê duyệt đã chọn')
+                        ->icon('heroicon-o-clock')
+                        ->color('info')
+                        ->form([
+                            Forms\Components\DateTimePicker::make('auto_approve_at')
+                                ->label('Thời gian tự động phê duyệt')
+                                ->required()
+                                ->minDate(now())
+                                ->helperText('Các công thức sẽ tự động được phê duyệt khi đến thời gian này'),
+                        ])
+                        ->modalHeading('Set lịch phê duyệt tự động cho công thức đã chọn')
+                        ->modalDescription('Chọn thời gian để các công thức tự động được phê duyệt')
+                        ->modalSubmitActionLabel('Set lịch')
+                        ->action(function (Collection $records, array $data) {
+                            $count = 0;
+                            foreach ($records as $record) {
+                                if ($record->status === 'pending') {
+                                    $record->update([
+                                        'auto_approve_at' => $data['auto_approve_at'],
+                                        'status' => 'pending'
+                                    ]);
+                                    $count++;
+                                }
+                            }
+                            return $count . ' công thức đã được set lịch phê duyệt.';
+                        })
+                        ->visible(fn(): bool => Auth::user()->hasRole(['admin', 'manager'])),
+                    Tables\Actions\BulkAction::make('set_auto_reject_selected')
+                        ->label('Set lịch từ chối đã chọn')
+                        ->icon('heroicon-o-clock')
+                        ->color('danger')
+                        ->form([
+                            Forms\Components\DateTimePicker::make('auto_reject_at')
+                                ->label('Thời gian tự động từ chối')
+                                ->required()
+                                ->minDate(now())
+                                ->helperText('Các công thức sẽ tự động bị từ chối khi đến thời gian này'),
+                        ])
+                        ->modalHeading('Set lịch từ chối tự động cho công thức đã chọn')
+                        ->modalDescription('Chọn thời gian để các công thức tự động bị từ chối')
+                        ->modalSubmitActionLabel('Set lịch')
+                        ->action(function (Collection $records, array $data) {
+                            $count = 0;
+                            foreach ($records as $record) {
+                                if ($record->status === 'pending') {
+                                    $record->update([
+                                        'auto_reject_at' => $data['auto_reject_at'],
+                                        'status' => 'pending'
+                                    ]);
+                                    $count++;
+                                }
+                            }
+                            return $count . ' công thức đã được set lịch từ chối.';
+                        })
+                        ->visible(fn(): bool => Auth::user()->hasRole(['admin', 'manager'])),
                     Tables\Actions\BulkAction::make('publish_selected')
                         ->label('Xuất bản đã chọn')
                         ->icon('heroicon-o-globe-alt')
@@ -486,7 +682,8 @@ class RecipeResource extends Resource
                                 }
                             }
                             return $count . ' công thức đã được xuất bản.';
-                        }),
+                        })
+                        ->visible(fn(): bool => Auth::user()->hasRole('admin')), // Chỉ Admin mới được xuất bản hàng loạt
                 ]),
             ])
             ->defaultSort('created_at', 'desc');

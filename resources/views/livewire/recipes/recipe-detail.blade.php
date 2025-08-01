@@ -64,8 +64,8 @@
                 class="absolute bottom-4 left-6 bg-white/80 px-6 py-3 rounded-xl flex flex-col md:flex-row md:items-center gap-2 shadow">
                 <h1 class="text-2xl md:text-3xl font-bold text-gray-900 mr-4">{{ $recipe->title }}</h1>
                 <div class="flex items-center gap-2 text-sm text-gray-600">
-                    @if ($profile && $profile->avatar)
-                        <img src="{{ Storage::url($profile->avatar) }}" alt="{{ $user->name }}"
+                    @if ($user->hasAvatar())
+                        <img src="{{ $user->getAvatarUrl() }}" alt="{{ $user->name }}"
                             class="w-7 h-7 rounded-full object-cover" />
                     @else
                         <span
@@ -182,14 +182,16 @@
                 </svg>
                 <span>{{ $recipe->favorite_count ?? 0 }}</span>
             </div>
-            <div class="flex gap-2" x-data="{ open: false }">
+            <div class="flex gap-2">
                 <!-- Nút chia sẻ -->
-                <button @click="open = true"
-                    class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg font-semibold flex items-center gap-2 transition"
-                    type="button">
-                    <x-heroicon-o-share class="w-5 h-5" />
-                    Chia sẻ
-                </button>
+                <div x-data="{ open: false }">
+                    <button @click="open = true"
+                        class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg font-semibold flex items-center gap-2 transition"
+                        type="button">
+                        <x-heroicon-o-share class="w-5 h-5" />
+                        Chia sẻ
+                    </button>
+                </div>
                 <!-- Component bộ sưu tập -->
                 @livewire('recipes.recipe-collection-manager', ['recipe' => $recipe])
 

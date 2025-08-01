@@ -20,9 +20,9 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    
+
     protected static ?string $navigationGroup = 'Quản lý người dùng';
-    
+
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
@@ -41,11 +41,14 @@ class UserResource extends Resource
                             ->required()
                             ->maxLength(255)
                             ->unique(ignoreRecord: true),
+                        Forms\Components\TextInput::make('province')
+                            ->label('Tỉnh/Thành phố')
+                            ->maxLength(100),
                         Forms\Components\TextInput::make('password')
                             ->label('Mật khẩu')
                             ->password()
-                            ->dehydrated(fn ($state) => filled($state))
-                            ->required(fn (string $context): bool => $context === 'create')
+                            ->dehydrated(fn($state) => filled($state))
+                            ->required(fn(string $context): bool => $context === 'create')
                             ->maxLength(255),
                         Forms\Components\Select::make('status')
                             ->label('Trạng thái')
@@ -57,7 +60,7 @@ class UserResource extends Resource
                             ->default('active')
                             ->required(),
                     ])->columns(2),
-                
+
                 Forms\Components\Section::make('Vai trò và quyền')
                     ->schema([
                         Forms\Components\Select::make('roles')
@@ -67,12 +70,17 @@ class UserResource extends Resource
                             ->preload()
                             ->searchable(),
                     ]),
-                
+
                 Forms\Components\Section::make('Thông tin bổ sung')
                     ->schema([
-                        Forms\Components\TextInput::make('avatar')
-                            ->label('Avatar URL')
-                            ->maxLength(255),
+                        Forms\Components\FileUpload::make('avatar')
+                            ->label('Avatar')
+                            ->image()
+                            ->imageEditor()
+                            ->circleCropper()
+                            ->disk('public')
+                            ->visibility('public')
+                            ->helperText('Nếu user đăng nhập bằng Google, avatar sẽ được lấy từ Google. Upload file mới sẽ ghi đè avatar Google.'),
                         Forms\Components\Textarea::make('bio')
                             ->label('Tiểu sử')
                             ->maxLength(500)
@@ -96,12 +104,24 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('avatar')
+                    ->label('Avatar')
+                    ->circular()
+                    ->size(40)
+                    ->getStateUsing(function ($record) {
+                        return $record->getAvatarUrl();
+                    }),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Tên')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->weight('bold'),
                 Tables\Columns\TextColumn::make('email')
                     ->label('Email')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('province')
+                    ->label('Tỉnh/Thành phố')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('roles.name')
@@ -111,7 +131,7 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Trạng thái')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn(string $state): string => match ($state) {
                         'active' => 'success',
                         'inactive' => 'warning',
                         'banned' => 'danger',
@@ -128,6 +148,14 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('login_count')
                     ->label('Số lần đăng nhập')
                     ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('recipes_count')
+                    ->label('Số công thức')
+                    ->counts('recipes')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('favorites_count')
+                    ->label('Số yêu thích')
+                    ->counts('favorites')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Tạo lúc')
@@ -150,7 +178,16 @@ class UserResource extends Resource
                     ->preload(),
                 Tables\Filters\Filter::make('email_verified')
                     ->label('Đã xác thực email')
-                    ->query(fn (Builder $query): Builder => $query->whereNotNull('email_verified_at')),
+                    ->query(fn(Builder $query): Builder => $query->whereNotNull('email_verified_at')),
+                Tables\Filters\Filter::make('has_recipes')
+                    ->label('Có công thức')
+                    ->query(fn(Builder $query): Builder => $query->has('recipes')),
+                Tables\Filters\Filter::make('has_favorites')
+                    ->label('Có yêu thích')
+                    ->query(fn(Builder $query): Builder => $query->has('favorites')),
+                Tables\Filters\Filter::make('recent_users')
+                    ->label('Người dùng mới (7 ngày)')
+                    ->query(fn(Builder $query): Builder => $query->where('created_at', '>=', now()->subDays(7))),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -161,14 +198,26 @@ class UserResource extends Resource
                         ->icon('heroicon-o-no-symbol')
                         ->color('danger')
                         ->requiresConfirmation()
-                        ->action(fn (User $record) => $record->update(['status' => 'banned']))
-                        ->visible(fn (User $record) => $record->status !== 'banned'),
+                        ->action(fn(User $record) => $record->update(['status' => 'banned']))
+                        ->visible(fn(User $record) => $record->status !== 'banned'),
                     Tables\Actions\Action::make('activate')
                         ->label('Kích hoạt')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn (User $record) => $record->update(['status' => 'active']))
-                        ->visible(fn (User $record) => $record->status !== 'active'),
+                        ->action(fn(User $record) => $record->update(['status' => 'active']))
+                        ->visible(fn(User $record) => $record->status !== 'active'),
+                    Tables\Actions\Action::make('view_recipes')
+                        ->label('Xem công thức')
+                        ->icon('heroicon-o-cake')
+                        ->color('info')
+                        ->url(fn(User $record): string => route('filament.admin.resources.recipes.index', ['tableFilters[user][value]' => $record->id]))
+                        ->visible(fn(User $record) => $record->recipes_count > 0),
+                    Tables\Actions\Action::make('view_profile')
+                        ->label('Xem profile')
+                        ->icon('heroicon-o-user')
+                        ->color('secondary')
+                        ->url(fn(User $record): string => route('filament.admin.resources.users.edit', $record))
+                        ->openUrlInNewTab(),
                 ]),
             ])
             ->bulkActions([
@@ -178,12 +227,12 @@ class UserResource extends Resource
                         ->icon('heroicon-o-no-symbol')
                         ->color('danger')
                         ->requiresConfirmation()
-                        ->action(fn (Collection $records) => $records->each->update(['status' => 'banned'])),
+                        ->action(fn(Collection $records) => $records->each->update(['status' => 'banned'])),
                     Tables\Actions\BulkAction::make('activate')
                         ->label('Kích hoạt')
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
-                        ->action(fn (Collection $records) => $records->each->update(['status' => 'active'])),
+                        ->action(fn(Collection $records) => $records->each->update(['status' => 'active'])),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);
@@ -204,10 +253,11 @@ class UserResource extends Resource
             'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
-    
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['roles']);
+            ->with(['roles'])
+            ->withCount(['recipes', 'favorites', 'ratings']);
     }
 }

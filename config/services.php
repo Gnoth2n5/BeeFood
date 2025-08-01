@@ -31,4 +31,18 @@ return [
         ],
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => rtrim(env('APP_URL'), '/') . '/auth/google/callback',
+    ],
+
+    'gemini' => [
+        'api_key' => env('GEMINI_API_KEY'),
+    ],
+
+    'openweather' => [
+        'api_key' => env('OPENWEATHER_API_KEY'),
+    ],
+
 ];
