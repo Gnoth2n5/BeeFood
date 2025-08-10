@@ -34,6 +34,9 @@ Route::get('profile', App\Livewire\Profile\ProfilePage::class)
 Route::get('/recipes', App\Livewire\Recipes\RecipeList::class)->name('recipes.index');
 Route::get('/recipes/{recipe}', RecipeDetail::class)->name('recipes.show');
 
+// Advanced Search route
+Route::get('/search', App\Livewire\AdvancedSearch::class)->name('search.advanced');
+
 // Weather-based recipe suggestions
 Route::get('/weather-suggestions', App\Livewire\WeatherRecipeSuggestions::class)->name('weather.suggestions');
 
@@ -43,6 +46,8 @@ Route::prefix('api/vietnam-provinces')->name('api.vietnam-provinces.')->group(fu
     Route::get('/stats', [App\Http\Controllers\VietnamProvinceController::class, 'stats'])->name('stats');
     Route::get('/health', [App\Http\Controllers\VietnamProvinceController::class, 'health'])->name('health');
     Route::get('/search', [App\Http\Controllers\VietnamProvinceController::class, 'search'])->name('search');
+    Route::get('/region/{region}', [App\Http\Controllers\VietnamProvinceController::class, 'provincesByRegion'])->name('provinces-by-region');
+    Route::get('/communes-with-coordinates', [App\Http\Controllers\VietnamProvinceController::class, 'communesWithCoordinates'])->name('communes-with-coordinates');
     Route::get('/{code}', [App\Http\Controllers\VietnamProvinceController::class, 'show'])->name('show');
     Route::get('/{provinceCode}/districts', [App\Http\Controllers\VietnamProvinceController::class, 'districts'])->name('districts');
     Route::get('/districts/{districtCode}/wards', [App\Http\Controllers\VietnamProvinceController::class, 'wards'])->name('wards');
