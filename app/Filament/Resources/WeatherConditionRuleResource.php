@@ -32,7 +32,7 @@ class WeatherConditionRuleResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-cloud';
 
-    protected static ?string $navigationGroup = 'Quản Lý Thời Tiết';
+    protected static ?string $navigationGroup = 'Quản lý thời tiết';
 
     protected static ?string $navigationLabel = 'Quy Tắc Thời Tiết';
 
@@ -250,7 +250,7 @@ class WeatherConditionRuleResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
                 Action::make('test_rule')
-                    ->label('Test Quy Tắc')
+                    ->label('Kiểm tra')
                     ->icon('heroicon-o-play')
                     ->color('success')
                     ->action(function (WeatherConditionRule $record) {
