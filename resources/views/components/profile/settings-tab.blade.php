@@ -1,7 +1,7 @@
 @props(['name', 'email', 'province', 'bio', 'phone', 'address', 'city', 'country', 'cooking_experience', 'dietary_preferences', 'allergies', 'health_conditions', 'experienceOptions', 'dietaryOptions'])
 
 <div class="max-w-4xl mx-auto">
-    <form wire:submit.prevent="saveProfile" class="">
+    <div  class="">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Cột trái: Thông tin cơ bản + Địa chỉ -->
             <div class="space-y-6">
@@ -100,5 +100,12 @@
                 </div>
             </div>
         </div>
-    </form>
+        
+        <!-- Submit Button -->
+        <div class="mt-8 flex justify-end">
+            <button wire:click="saveProfile" type="submit" class="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                Lưu thay đổi
+            </button>
+        </div>
+    </div>
 </div> 

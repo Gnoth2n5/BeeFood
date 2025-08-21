@@ -19,6 +19,66 @@ class WeatherService
     }
 
     /**
+     * Get current weather by coordinates from session storage.
+     */
+    public function getCurrentWeatherByCoordinates($latitude, $longitude, $cityCode = null, $cityName = null)
+    {
+        try {
+            Log::info($this->apiKey);
+            $response = Http::withOptions([
+                'verify' => false,
+            ])->get('https://api.openweathermap.org/data/2.5/weather', [
+                'lat' => $latitude,
+                'lon' => $longitude,
+                'appid' => $this->apiKey,
+                'units' => 'metric',
+                'lang' => 'vi'
+            ]);
+           
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                // Create a temporary city object for processing if not provided
+                $city = $cityCode && $cityName ? 
+                    (object)['code' => $cityCode, 'name' => $cityName, 'latitude' => $latitude, 'longitude' => $longitude] :
+                    (object)['code' => 'COORDS', 'name' => 'Unknown', 'latitude' => $latitude, 'longitude' => $longitude];
+                
+                Log::info('Weather API response by coordinates', [
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'city_code' => $cityCode,
+                    'city_name' => $cityName,
+                    'data' => $data
+                ]);
+                
+                return $this->processWeatherDataByCoordinates($city, $data, $latitude, $longitude);
+            }
+
+            Log::error('OpenWeatherMap API error by coordinates', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'response' => $response->body()
+            ]);
+
+            return null;
+
+        } catch (\Exception $e) {
+            Log::error('Weather API request exception by coordinates', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'city_code' => $cityCode,
+                'city_name' => $cityName,
+                'exception_message' => $e->getMessage(),
+                'request_url' => "{$this->baseUrl}/weather",
+                'timestamp' => now()->toISOString()
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
      * Get current weather for a city.
      */
     public function getCurrentWeather(VietnamCity $city)
@@ -31,27 +91,20 @@ class WeatherService
                 'units' => 'metric',
                 'lang' => 'vi'
             ]);
+            
 
             if ($response->successful()) {
                 $data = $response->json();
+                Log::info('Weather API response', [
+                    'city_id' => $city->id,
+                    'city_name' => $city->name,
+                    'city_code' => $city->code,
+                    'data' => $data
+                ]);
                 return $this->processWeatherData($city, $data);
             }
 
-            // Log chi tiết lỗi API với thông tin đầy đủ
-            Log::error('OpenWeatherMap API request failed', [
-                'city_id' => $city->id,
-                'city_name' => $city->name,
-                'city_code' => $city->code,
-                'coordinates' => [
-                    'lat' => $city->latitude,
-                    'lon' => $city->longitude
-                ],
-                'status_code' => $response->status(),
-                'response_body' => $response->body(),
-                'response_headers' => $response->headers(),
-                'request_url' => "{$this->baseUrl}/weather",
-                'timestamp' => now()->toISOString()
-            ]);
+          
 
             return null;
 
@@ -73,6 +126,47 @@ class WeatherService
                 'stack_trace' => $e->getTraceAsString(),
                 'request_url' => "{$this->baseUrl}/weather",
                 'timestamp' => now()->toISOString()
+            ]);
+
+            return null;
+        }
+    }
+
+    /**
+     * Get 5-day forecast by coordinates from session storage.
+     */
+    public function getForecastByCoordinates($latitude, $longitude, $cityCode = null, $cityName = null)
+    {
+        try {
+            $response = Http::get("{$this->baseUrl}/forecast", [
+                'lat' => $latitude,
+                'lon' => $longitude,
+                'appid' => $this->apiKey,
+                'units' => 'metric',
+                'lang' => 'vi'
+            ]);
+
+            if ($response->successful()) {
+                return $response->json();
+            }
+
+            Log::error('OpenWeatherMap Forecast API error by coordinates', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'city_code' => $cityCode,
+                'city_name' => $cityName,
+                'response' => $response->body()
+            ]);
+
+            return null;
+
+        } catch (\Exception $e) {
+            Log::error('Weather Forecast API request failed by coordinates', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'city_code' => $cityCode,
+                'city_name' => $cityName,
+                'error' => $e->getMessage()
             ]);
 
             return null;
@@ -112,6 +206,41 @@ class WeatherService
 
             return null;
         }
+    }
+
+    /**
+     * Process and save weather data by coordinates.
+     */
+    protected function processWeatherDataByCoordinates($city, array $data, $latitude, $longitude)
+    {
+        $weatherData = [
+            'city_name' => $city->name,
+            'city_code' => $city->code,
+            'temperature' => $data['main']['temp'],
+            'feels_like' => $data['main']['feels_like'],
+            'humidity' => $data['main']['humidity'],
+            'wind_speed' => $data['wind']['speed'] ?? 0,
+            'weather_condition' => $data['weather'][0]['main'],
+            'weather_description' => $data['weather'][0]['description'],
+            'weather_icon' => $data['weather'][0]['icon'],
+            'pressure' => $data['main']['pressure'],
+            'visibility' => $data['visibility'] ?? 10000,
+            'uv_index' => null, // UV index requires separate API call
+            'forecast_data' => null,
+            'last_updated' => now(),
+            'weather_category' => $this->getWeatherCategory($data['weather'][0]['main']),
+            'description' => $data['weather'][0]['description'],
+            'latitude' => $latitude,
+            'longitude' => $longitude
+        ];
+
+        // Save weather data with coordinates
+        WeatherData::updateOrCreate(
+            ['city_code' => $city->code, 'last_updated' => now()->startOfHour()],
+            $weatherData
+        );
+
+        return $weatherData;
     }
 
     /**
@@ -171,6 +300,68 @@ class WeatherService
     }
 
     /**
+     * Refresh weather data from session coordinates and update cache.
+     */
+    public function refreshWeatherFromSession()
+    {
+        if (!session('user_location')) {
+            Log::warning('No user location found in session for weather refresh');
+            return null;
+        }
+
+        $userLocation = session('user_location');
+        $latitude = $userLocation['latitude'] ?? null;
+        $longitude = $userLocation['longitude'] ?? null;
+        $cityCode = $userLocation['nearest_city_code'] ?? null;
+        $cityName = $userLocation['nearest_city_name'] ?? null;
+
+        if (!$latitude || !$longitude) {
+            Log::warning('Invalid coordinates in session for weather refresh', ['user_location' => $userLocation]);
+            return null;
+        }
+
+        // Clear any existing cache for this location
+        $cacheKey = "weather_coords_{$latitude}_{$longitude}";
+        Cache::forget($cacheKey);
+
+        // Get fresh weather data
+        $weatherData = $this->getCurrentWeatherByCoordinates($latitude, $longitude, $cityCode, $cityName);
+
+        if ($weatherData) {
+            // Cache the fresh data
+            Cache::put($cacheKey, $weatherData, 1800); // 30 minutes
+            Log::info('Weather data refreshed and cached from coordinates', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'city_code' => $cityCode
+            ]);
+        }
+
+        return $weatherData;
+    }
+
+    /**
+     * Get cached weather data by coordinates.
+     */
+    public function getCachedWeatherByCoordinates($latitude, $longitude)
+    {
+        $cacheKey = "weather_coords_{$latitude}_{$longitude}";
+
+        return Cache::remember($cacheKey, 1800, function () use ($latitude, $longitude) { // 30 minutes cache
+            // Try to get from session if available
+            if (session('user_location')) {
+                $userLocation = session('user_location');
+                $cityCode = $userLocation['nearest_city_code'] ?? null;
+                $cityName = $userLocation['nearest_city_name'] ?? null;
+                
+                return $this->getCurrentWeatherByCoordinates($latitude, $longitude, $cityCode, $cityName);
+            }
+            
+            return $this->getCurrentWeatherByCoordinates($latitude, $longitude);
+        });
+    }
+
+    /**
      * Get cached weather data for a city.
      */
     public function getCachedWeather(VietnamCity $city)
@@ -180,6 +371,166 @@ class WeatherService
         return Cache::remember($cacheKey, 1800, function () use ($city) { // 30 minutes cache
             return $city->latestWeatherData;
         });
+    }
+
+    /**
+     * Get current weather from session storage coordinates.
+     */
+    public function getCurrentWeatherFromSession()
+    {
+        if (!session('user_location')) {
+            Log::warning('No user location found in session');
+            return null;
+        }
+
+        $userLocation = session('user_location');
+        $latitude = $userLocation['latitude'] ?? null;
+        $longitude = $userLocation['longitude'] ?? null;
+        $cityCode = $userLocation['nearest_city_code'] ?? null;
+        $cityName = $userLocation['nearest_city_name'] ?? null;
+
+        if (!$latitude || !$longitude) {
+            Log::warning('Invalid coordinates in session', ['user_location' => $userLocation]);
+            return null;
+        }
+
+        return $this->getCurrentWeatherByCoordinates($latitude, $longitude, $cityCode, $cityName);
+    }
+
+    /**
+     * Get forecast from session storage coordinates.
+     */
+    public function getForecastFromSession()
+    {
+        if (!session('user_location')) {
+            Log::warning('No user location found in session');
+            return null;
+        }
+
+        $userLocation = session('user_location');
+        $latitude = $userLocation['latitude'] ?? null;
+        $longitude = $userLocation['longitude'] ?? null;
+        $cityCode = $userLocation['nearest_city_code'] ?? null;
+        $cityName = $userLocation['nearest_city_name'] ?? null;
+
+        if (!$latitude || !$longitude) {
+            Log::warning('Invalid coordinates in session', ['user_location' => $userLocation]);
+            return null;
+        }
+
+        return $this->getForecastByCoordinates($latitude, $longitude, $cityCode, $cityName);
+    }
+
+    /**
+     * Get weather data for multiple nearby locations around coordinates.
+     */
+    public function getNearbyLocationsWeather($latitude, $longitude, $radius = 50)
+    {
+        // Find cities within the specified radius (in kilometers)
+        $nearbyCities = VietnamCity::active()
+            ->selectRaw('*, 
+                (6371 * acos(cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))) AS distance', 
+                [$latitude, $longitude, $latitude])
+            ->having('distance', '<=', $radius)
+            ->orderBy('distance')
+            ->limit(5)
+            ->get();
+
+        $weatherData = [];
+
+        foreach ($nearbyCities as $city) {
+            $weather = $this->getCachedWeather($city);
+            if ($weather) {
+                $weatherData[] = [
+                    'city' => $city,
+                    'weather' => $weather,
+                    'distance' => round($city->distance, 2)
+                ];
+            }
+        }
+
+        return $weatherData;
+    }
+
+    /**
+     * Handle location update and refresh weather data.
+     */
+    public function handleLocationUpdate($latitude, $longitude, $cityCode = null, $cityName = null)
+    {
+        // Clear old cache entries
+        if (session('user_location')) {
+            $oldLocation = session('user_location');
+            $oldLat = $oldLocation['latitude'] ?? null;
+            $oldLon = $oldLocation['longitude'] ?? null;
+            
+            if ($oldLat && $oldLon) {
+                $oldCacheKey = "weather_coords_{$oldLat}_{$oldLon}";
+                Cache::forget($oldCacheKey);
+            }
+        }
+
+        // Update session with new location
+        session([
+            'user_location' => [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'nearest_city_code' => $cityCode,
+                'nearest_city_name' => $cityName,
+                'updated_at' => now()->toISOString()
+            ]
+        ]);
+
+        // Get fresh weather data for new location
+        $weatherData = $this->getCurrentWeatherByCoordinates($latitude, $longitude, $cityCode, $cityName);
+
+        if ($weatherData) {
+            Log::info('Location updated and weather data refreshed', [
+                'latitude' => $latitude,
+                'longitude' => $longitude,
+                'city_code' => $cityCode,
+                'city_name' => $cityName
+            ]);
+        }
+
+        return $weatherData;
+    }
+
+    /**
+     * Get weather data for current user location with automatic fallback.
+     */
+    public function getCurrentUserWeather()
+    {
+        // First try to get from session coordinates
+        if (session('user_location')) {
+            $userLocation = session('user_location');
+            $latitude = $userLocation['latitude'] ?? null;
+            $longitude = $userLocation['longitude'] ?? null;
+            $cityCode = $userLocation['nearest_city_code'] ?? null;
+            $cityName = $userLocation['nearest_city_name'] ?? null;
+
+            if ($latitude && $longitude) {
+                // Try cached data first
+                $cachedWeather = $this->getCachedWeatherByCoordinates($latitude, $longitude);
+                if ($cachedWeather) {
+                    return $cachedWeather;
+                }
+
+                // If no cache, get fresh data
+                $freshWeather = $this->getCurrentWeatherByCoordinates($latitude, $longitude, $cityCode, $cityName);
+                if ($freshWeather) {
+                    return $freshWeather;
+                }
+            }
+        }
+
+        // Fallback: try to get weather for default city (HCM)
+        $defaultCity = VietnamCity::where('code', 'HCM')->first();
+        if ($defaultCity) {
+            return $this->getCachedWeather($defaultCity);
+        }
+
+        Log::warning('No weather data available for current user location');
+        return null;
     }
 
     /**

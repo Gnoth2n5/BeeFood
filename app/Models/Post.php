@@ -54,6 +54,30 @@ class Post extends Model
     }
 
     /**
+     * Get the comments for this post.
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class)->approved()->topLevel()->with('user', 'replies.user');
+    }
+
+    /**
+     * Get all comments for this post (including pending/rejected for admin).
+     */
+    public function allComments()
+    {
+        return $this->hasMany(Comment::class)->with('user', 'replies.user');
+    }
+
+    /**
+     * Get the approved comments count.
+     */
+    public function getApprovedCommentsCountAttribute(): int
+    {
+        return $this->comments()->count();
+    }
+
+    /**
      * Get the favorites for this post.
      */
     public function favorites()

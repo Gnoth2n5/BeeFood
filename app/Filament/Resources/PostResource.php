@@ -145,7 +145,9 @@ class PostResource extends Resource
                 Tables\Columns\ImageColumn::make('featured_image')
                     ->label('Ảnh')
                     ->circular()
-                    ->size(50),
+                    ->size(50)
+                    ->disk('public')
+                    ->visibility('public'),
                 Tables\Columns\TextColumn::make('title')
                     ->label('Tiêu đề')
                     ->searchable()

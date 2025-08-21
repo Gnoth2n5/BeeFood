@@ -56,7 +56,7 @@ class PostController extends Controller
             return Post::where('slug', $slug)
                 ->where('status', 'published')
                 ->where('published_at', '<=', now())
-                ->with('user')
+                ->with(['user', 'comments.user', 'comments.replies.user'])
                 ->firstOrFail();
         });
 

@@ -15,8 +15,20 @@
                 </svg>
             </div>
         @endif
-        <!-- Favorite Button nhỏ -->
-        <div class="absolute top-2 right-2 z-10">
+        <!-- Action Buttons -->
+        <div class="absolute top-2 right-2 z-10 flex flex-col gap-2">
+            <!-- Edit Button for recipe owner -->
+            @if(\Illuminate\Support\Facades\Auth::check() && \Illuminate\Support\Facades\Auth::user()->can('update', $recipe))
+                <a href="{{ route('recipes.edit', $recipe) }}"
+                   class="w-8 h-8 flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-sm transition-colors p-0"
+                   aria-label="Chỉnh sửa">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </a>
+            @endif
+            
+            <!-- Favorite Button -->
             <button 
                 class="w-8 h-8 flex items-center justify-center bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors p-0"
                 wire:click="confirmToggleFavorite({{ $recipe->id }})"

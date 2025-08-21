@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\Storage;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
-
+use Illuminate\Support\Facades\Log;
 #[Layout('layouts.app')]
 class ProfilePage extends Component
 {
@@ -143,41 +143,43 @@ class ProfilePage extends Component
 
     public function saveProfile()
     {
-        $this->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $this->user->id,
-            'province' => 'nullable|string|max:100',
-            'bio' => 'nullable|string|max:500',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'city' => 'nullable|string|max:100',
-            'country' => 'nullable|string|max:100',
-            'cooking_experience' => 'required|in:beginner,intermediate,advanced',
-            'dietary_preferences' => 'array',
-            'allergies' => 'nullable|string|max:500',
-            'health_conditions' => 'nullable|string|max:500',
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-        ], [
-            'name.required' => 'Họ tên là bắt buộc.',
-            'name.max' => 'Họ tên không được vượt quá 255 ký tự.',
-            'email.required' => 'Email là bắt buộc.',
-            'email.email' => 'Email không đúng định dạng.',
-            'email.unique' => 'Email này đã được sử dụng.',
-            'bio.max' => 'Giới thiệu bản thân không được vượt quá 500 ký tự.',
-            'phone.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
-            'address.max' => 'Địa chỉ không được vượt quá 500 ký tự.',
-            'city.max' => 'Thành phố không được vượt quá 100 ký tự.',
-            'country.max' => 'Quốc gia không được vượt quá 100 ký tự.',
-            'cooking_experience.required' => 'Kinh nghiệm nấu ăn là bắt buộc.',
-            'cooking_experience.in' => 'Kinh nghiệm nấu ăn không hợp lệ.',
-            'allergies.max' => 'Dị ứng thực phẩm không được vượt quá 500 ký tự.',
-            'health_conditions.max' => 'Tình trạng sức khỏe không được vượt quá 500 ký tự.',
-            'avatar.image' => 'File phải là hình ảnh.',
-            'avatar.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif, webp.',
-            'avatar.max' => 'Kích thước hình ảnh không được vượt quá 2MB.',
-        ]);
-
         try {
+            \Log::info('saveProfile called - method started');
+            \Log::info('Current user: ' . $this->user->id);
+            \Log::info('Current profile: ' . $this->profile->id);
+            $this->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $this->user->id,
+                'province' => 'nullable|string|max:100',
+                'bio' => 'nullable|string|max:500',
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:500',
+                'city' => 'nullable|string|max:100',
+                'country' => 'nullable|string|max:100',
+                'cooking_experience' => 'required|in:beginner,intermediate,advanced',
+                'dietary_preferences' => 'array',
+                'allergies' => 'nullable|string|max:500',
+                'health_conditions' => 'nullable|string|max:500',
+                'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            ], [
+                'name.required' => 'Họ tên là bắt buộc.',
+                'name.max' => 'Họ tên không được vượt quá 255 ký tự.',
+                'email.required' => 'Email là bắt buộc.',
+                'email.email' => 'Email không đúng định dạng.',
+                'email.unique' => 'Email này đã được sử dụng.',
+                'bio.max' => 'Giới thiệu bản thân không được vượt quá 500 ký tự.',
+                'phone.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
+                'address.max' => 'Địa chỉ không được vượt quá 500 ký tự.',
+                'city.max' => 'Thành phố không được vượt quá 100 ký tự.',
+                'country.max' => 'Quốc gia không được vượt quá 100 ký tự.',
+                'cooking_experience.required' => 'Kinh nghiệm nấu ăn là bắt buộc.',
+                'cooking_experience.in' => 'Kinh nghiệm nấu ăn không hợp lệ.',
+                'allergies.max' => 'Dị ứng thực phẩm không được vượt quá 500 ký tự.',
+                'health_conditions.max' => 'Tình trạng sức khỏe không được vượt quá 500 ký tự.',
+                'avatar.image' => 'File phải là hình ảnh.',
+                'avatar.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif, webp.',
+                'avatar.max' => 'Kích thước hình ảnh không được vượt quá 2MB.',
+            ]);
             // Handle avatar upload first
             if ($this->avatar) {
                 // Delete old avatar if exists (only if it's a local file)
@@ -232,6 +234,7 @@ class ProfilePage extends Component
             session()->flash('success', 'Hồ sơ đã được cập nhật thành công!');
 
         } catch (\Exception $e) {
+            \Log::error('Error saving profile: ' . $e->getMessage());
             session()->flash('error', 'Có lỗi xảy ra khi cập nhật hồ sơ: ' . $e->getMessage());
         }
     }

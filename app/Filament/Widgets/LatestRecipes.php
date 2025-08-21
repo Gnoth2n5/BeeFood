@@ -25,7 +25,9 @@ class LatestRecipes extends BaseWidget
                 Tables\Columns\ImageColumn::make('featured_image')
                     ->label('Ảnh')
                     ->circular()
-                    ->size(40),
+                    ->size(40)
+                    ->disk('public')
+                    ->visibility('public'),
                 Tables\Columns\TextColumn::make('title')
                     ->label('Tiêu đề')
                     ->limit(50)

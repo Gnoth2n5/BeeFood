@@ -115,6 +115,11 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
+                Tables\Columns\TextColumn::make('isVipAccount')
+                    ->label('VIP')
+                    ->badge()
+                    ->formatStateUsing(fn (bool $state): string => $state ? 'Có' : 'Không')
+                    ->color(fn(bool $state): string => $state ? 'success' : 'warning'),
                 Tables\Columns\TextColumn::make('email')
                     ->label('Email')
                     ->searchable()
@@ -193,6 +198,12 @@ class UserResource extends Resource
                 Tables\Filters\Filter::make('non_admin_users')
                     ->label('Chỉ hiển thị không phải Admin')
                     ->query(fn(Builder $query): Builder => $query->whereDoesntHave('roles', fn($q) => $q->where('name', 'admin'))),
+                Tables\Filters\Filter::make('vip_users')
+                    ->label('Chỉ hiển thị VIP')
+                    ->query(fn(Builder $query): Builder => $query->whereHas('profile', fn($q) => $q->where('isVipAccount', true))),
+                Tables\Filters\Filter::make('non_vip_users')
+                    ->label('Chỉ hiển thị không phải VIP')
+                    ->query(fn(Builder $query): Builder => $query->whereDoesntHave('profile', fn($q) => $q->where('isVipAccount', true))),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -223,6 +234,26 @@ class UserResource extends Resource
                         ->color('secondary')
                         ->url(fn(User $record): string => route('filament.admin.resources.users.edit', $record))
                         ->openUrlInNewTab(),
+                    Tables\Actions\Action::make('toggle_vip')
+                        ->label('Chuyển đổi VIP')
+                        ->icon('heroicon-o-star')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading('Chuyển đổi trạng thái VIP')
+                        ->modalDescription(fn(User $record): string => 
+                            $record->isVipAccount 
+                                ? 'Bạn có chắc chắn muốn hủy quyền VIP cho người dùng này?' 
+                                : 'Bạn có chắc chắn muốn cấp quyền VIP cho người dùng này?'
+                        )
+                        ->action(function(User $record) {
+                            $record->profile()->updateOrCreate(
+                                ['user_id' => $record->id],
+                                ['isVipAccount' => !$record->isVipAccount]
+                            );
+                        })
+                        ->modalSubmitActionLabel(fn(User $record): string => 
+                            $record->isVipAccount ? 'Hủy VIP' : 'Cấp VIP'
+                        ),
                     Tables\Actions\DeleteAction::make()
                         ->label('Xóa người dùng')
                         ->icon('heroicon-o-trash')
@@ -248,6 +279,40 @@ class UserResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->color('success')
                         ->action(fn(Collection $records) => $records->each->update(['status' => 'active']))
+                        ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('grant_vip')
+                        ->label('Cấp quyền VIP')
+                        ->icon('heroicon-o-star')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->modalHeading('Cấp quyền VIP')
+                        ->modalDescription('Bạn có chắc chắn muốn cấp quyền VIP cho những người dùng đã chọn?')
+                        ->modalSubmitActionLabel('Cấp VIP')
+                        ->action(function(Collection $records) {
+                            $records->each(function($user) {
+                                $user->profile()->updateOrCreate(
+                                    ['user_id' => $user->id],
+                                    ['isVipAccount' => true]
+                                );
+                            });
+                        })
+                        ->deselectRecordsAfterCompletion(),
+                    Tables\Actions\BulkAction::make('revoke_vip')
+                        ->label('Hủy quyền VIP')
+                        ->icon('heroicon-o-x-mark')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->modalHeading('Hủy quyền VIP')
+                        ->modalDescription('Bạn có chắc chắn muốn hủy quyền VIP cho những người dùng đã chọn?')
+                        ->modalSubmitActionLabel('Hủy VIP')
+                        ->action(function(Collection $records) {
+                            $records->each(function($user) {
+                                $user->profile()->updateOrCreate(
+                                    ['user_id' => $user->id],
+                                    ['isVipAccount' => false]
+                                );
+                            });
+                        })
                         ->deselectRecordsAfterCompletion(),
                     Tables\Actions\DeleteBulkAction::make()
                         ->label('Xóa người dùng')
@@ -298,7 +363,7 @@ class UserResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['roles'])
+            ->with(['roles', 'profile'])
             ->withCount(['recipes', 'favorites', 'ratings']);
     }
 }

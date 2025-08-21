@@ -7,7 +7,8 @@ use Illuminate\Support\Facades\Log;
 use App\Models\Recipe;
 use App\Models\WeatherData;
 use App\Models\VietnamCity;
-
+use App\Models\WeatherConditionRule;
+use App\Services\WeatherConditionRuleService;
 class WeatherSlideshowSimple extends Component
 {
     public $selectedCity = 'HCM';
@@ -18,10 +19,19 @@ class WeatherSlideshowSimple extends Component
     public $userLongitude = null;
     public $nearestCity = null;
 
+
+    protected $weatherConditionRuleService;
+
+    public function boot( WeatherConditionRuleService $weatherConditionRuleService)
+    {
+   
+        $this->weatherConditionRuleService = $weatherConditionRuleService;
+    }
+
     public function mount()
     {
         Log::info('WeatherSlideshowSimple mounted');
-
+      
         // Kiểm tra xem có thông tin vị trí từ session không
         if (session('user_location')) {
             $userLocation = session('user_location');
@@ -32,7 +42,10 @@ class WeatherSlideshowSimple extends Component
 
             Log::info('Loaded user location from session: ' . $userLocation['nearest_city_name'] . ' (' . $userLocation['nearest_city_code'] . ')');
         } else {
-            // Tự động lấy vị trí khi component được load
+            $this->recipes = Recipe::select('id', 'title', 'slug', 'description', 'summary', 'user_id', 'cooking_time', 'servings', 'difficulty', 'featured_image')
+            ->with(['user:id,name'])
+            ->take(3)
+            ->get();
             $this->dispatch('auto-get-location');
         }
 
@@ -42,13 +55,28 @@ class WeatherSlideshowSimple extends Component
     public function loadData()
     {
         Log::info('loadData called for city: ' . $this->selectedCity);
-        $this->recipes = Recipe::take(3)->get();
-        $this->weatherData = WeatherData::where('city_code', $this->selectedCity)->first();
+        
+        // Memory optimization: Load only essential columns
+        
+        
+            
+        // Get weather data using the new coordinate-based service
+        $weatherService = app(\App\Services\WeatherService::class);
+        $this->weatherData = $weatherService->getCurrentUserWeather();
+
+
+        if($this->weatherData){
+        $this->recipes = $this->weatherConditionRuleService->getSuggestionsByConditions(
+            $this->weatherData['temperature'],
+            $this->weatherData['humidity'],
+                    12
+            );
+        }   
 
         if (!$this->weatherData) {
-            Log::info('No weather data found for city: ' . $this->selectedCity);
+            Log::info('No weather data found for current user location');
         } else {
-            Log::info('Weather data found: ' . $this->weatherData->temperature . '°C, ' . $this->weatherData->humidity . '%');
+            // Log::info('Weather data found: ' . $this->weatherData->temperature . '°C, ' . $this->weatherData->humidity . '%');
         }
     }
 
@@ -112,6 +140,7 @@ class WeatherSlideshowSimple extends Component
         Log::info('nextSlide called');
         if ($this->currentSlide < count($this->recipes) - 1) {
             $this->currentSlide++;
+            $this->dispatch('slide-changed', currentSlide: $this->currentSlide);
         }
     }
 
@@ -120,6 +149,7 @@ class WeatherSlideshowSimple extends Component
         Log::info('previousSlide called');
         if ($this->currentSlide > 0) {
             $this->currentSlide--;
+            $this->dispatch('slide-changed', currentSlide: $this->currentSlide);
         }
     }
 
@@ -128,6 +158,7 @@ class WeatherSlideshowSimple extends Component
         Log::info('goToSlide called with: ' . $index);
         if ($index >= 0 && $index < count($this->recipes)) {
             $this->currentSlide = $index;
+            $this->dispatch('slide-changed', currentSlide: $this->currentSlide);
         }
     }
 

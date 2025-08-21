@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\RecipeService;
 use App\Services\FavoriteService;
 use App\Services\GeminiService;
+use App\Services\PerformanceService;
 use Livewire\Component;
 use Livewire\WithPagination;
 use Livewire\WithFileUploads;
@@ -131,20 +132,14 @@ class HomePage extends Component
 
     public function getStatsProperty()
     {
-        return [
-            'recipes' => Recipe::where('status', 'approved')->count(),
-            'users' => User::count(),
-            'categories' => Category::count(),
-        ];
+        $performanceService = app(PerformanceService::class);
+        return $performanceService->getCachedStats();
     }
 
     public function getCategoriesProperty()
     {
-        return Category::where('parent_id', null)
-            ->with(['children', 'recipes'])
-            ->withCount('recipes')
-            ->limit(6)
-            ->get();
+        $performanceService = app(PerformanceService::class);
+        return $performanceService->getCachedCategories(6);
     }
 
     public function getRecipesProperty()

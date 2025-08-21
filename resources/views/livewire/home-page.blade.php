@@ -24,14 +24,14 @@
 
     <!-- Call to Action Section -->
     <section class="py-16 bg-orange-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div class="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <h2 class="text-3xl font-bold text-gray-900 mb-4">Chia sẻ công thức của bạn</h2>
             <p class="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
                 Bạn có công thức nấu ăn ngon? Hãy chia sẻ với cộng đồng BeeFood và nhận được phản hồi từ những người yêu ẩm thực khác.
             </p>
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
                 @auth
-                    <a href="{{ route('filament.user.resources.user-recipes.create') }}" 
+                    <a href="{{ route('recipes.create') }}" 
                        class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 transition-colors">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -60,7 +60,7 @@
 
     <!-- Features Section -->
     <section class="py-16 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
                 <h2 class="text-3xl font-bold text-gray-900 mb-4">Tại sao chọn BeeFood?</h2>
                 <p class="text-lg text-gray-600 max-w-3xl mx-auto">
