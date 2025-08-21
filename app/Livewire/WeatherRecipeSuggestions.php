@@ -9,7 +9,7 @@ use App\Services\WeatherConditionRuleService;
 use Livewire\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\On;
-
+use Illuminate\Support\Facades\Log;
 #[Layout('layouts.app')]
 class WeatherRecipeSuggestions extends Component
 {
@@ -171,15 +171,14 @@ class WeatherRecipeSuggestions extends Component
         $this->error = null;
 
         try {
-            $city = VietnamCity::where('code', $this->selectedCity)->first();
-            if (!$city) {
-                $this->error = 'Không tìm thấy thông tin thành phố: ' . $this->selectedCity;
+            // Get weather data using the new coordinate-based service
+            $this->weatherData = $this->weatherService->getCurrentUserWeather();
+            
+            if (!$this->weatherData) {
+                $this->error = 'Không thể lấy dữ liệu thời tiết cho vị trí hiện tại';
                 $this->loading = false;
                 return;
             }
-
-            // Load weather data - sử dụng API trực tiếp thay vì cache
-            $this->weatherData = $this->weatherService->getCurrentWeather($city);
 
             if (!$this->weatherData) {
                 $this->error = 'Không có dữ liệu thời tiết cho thành phố này';
@@ -196,6 +195,7 @@ class WeatherRecipeSuggestions extends Component
                 );
             } else {
                 // Sử dụng nhiệt độ và độ ẩm từ weather data để tìm quy tắc phù hợp
+                Log::info('weatherData', [$this->weatherData]);
                 $this->suggestions = $this->weatherConditionRuleService->getSuggestionsByConditions(
                     $this->weatherData['temperature'],
                     $this->weatherData['humidity'],

@@ -14,56 +14,108 @@ class WeatherConditionRuleService
     /**
      * Get recipe suggestions based on temperature and humidity conditions.
      */
-    public function getSuggestionsByConditions($temperature, $humidity = null, $limit = 12)
+    public function getSuggestionsByConditions($temperature, $humidity, $limit = 12)
     {
-        $cacheKey = "weather_suggestions_{$temperature}_{$humidity}_{$limit}";
-
-        return Cache::remember($cacheKey, 1800, function () use ($temperature, $humidity, $limit) {
-            return $this->generateSuggestionsByConditions($temperature, $humidity, $limit);
-        });
+        try {
+            // Always generate suggestions first
+            $suggestions = $this->generateSuggestionsByConditions($temperature, $humidity, $limit);
+            
+            // Then cache the result
+            $cacheKey = "weather_suggestions_{$temperature}_{$humidity}_{$limit}";
+            Cache::put($cacheKey, $suggestions, 1800);
+            
+            return $suggestions;
+        } catch (\Throwable $th) {
+            Log::error('getSuggestionsByConditions', [
+                'temperature' => $temperature,
+                'humidity' => $humidity,
+                'limit' => $limit,
+                'error' => $th->getMessage()
+            ]);
+            return $this->getDefaultSuggestions($limit);
+        }
     }
 
     /**
      * Generate suggestions based on weather conditions.
      */
-    protected function generateSuggestionsByConditions($temperature, $humidity = null, $limit = 12)
+    protected function generateSuggestionsByConditions($temperature, $humidity, $limit = 12)
     {
-        // Tìm các quy tắc phù hợp với điều kiện thời tiết
-        $matchingRules = $this->findMatchingRules($temperature, $humidity);
+        try {
+            // Find matching weather condition rules
+            $matchingRules = $this->findMatchingRules($temperature, $humidity);
 
-        if ($matchingRules->isEmpty()) {
+            if ($matchingRules->isEmpty()) {
+                return $this->getDefaultSuggestions($limit);
+            }
+
+            // Lấy recipes từ các quy tắc phù hợp
+            $recipes = collect();
+            foreach ($matchingRules as $rule) {
+                $ruleRecipes = $rule->getMatchingRecipes($limit);
+                $recipes = $recipes->merge($ruleRecipes);
+            }
+
+            // Loại bỏ trùng lặp và sắp xếp theo độ ưu tiên
+            $recipes = $recipes->unique('id')
+                ->sortByDesc('average_rating')
+                ->take($limit);
+
+            return $recipes;
+        } catch (\Throwable $th) {
+            Log::error('generateSuggestionsByConditions', [
+                'temperature' => $temperature,
+                'humidity' => $humidity,
+                'error' => $th->getMessage()
+            ]);
             return $this->getDefaultSuggestions($limit);
         }
-
-        // Lấy recipes từ các quy tắc phù hợp
-        $recipes = collect();
-        foreach ($matchingRules as $rule) {
-            $ruleRecipes = $rule->getMatchingRecipes($limit);
-            $recipes = $recipes->merge($ruleRecipes);
-        }
-
-        // Loại bỏ trùng lặp và sắp xếp theo độ ưu tiên
-        $recipes = $recipes->unique('id')
-            ->sortByDesc('average_rating')
-            ->take($limit);
-
-        return $recipes;
     }
 
     /**
      * Find rules that match the given weather conditions.
      */
-    protected function findMatchingRules($temperature, $humidity = null)
+    protected function findMatchingRules($temperature, $humidity )
     {
-        $query = WeatherConditionRule::active()
-            ->forTemperature($temperature)
-            ->orderByPriority();
-
-        if ($humidity !== null) {
-            $query->forHumidity($humidity);
+        try {
+            // Validate input parameters
+            if (!is_numeric($temperature)) {
+                Log::error('findMatchingRules - Invalid temperature', ['temperature' => $temperature]);
+                return collect();
+            }
+            
+            if (!is_numeric($humidity)) {
+                Log::error('findMatchingRules - Invalid humidity', ['humidity' => $humidity]);
+                return collect();
+            }
+            
+            // Convert to proper types
+            $temperature = (float) $temperature;
+            $humidity = (int) $humidity;
+            
+            // Build and execute query
+            $query = WeatherConditionRule::active()
+                ->forTemperature($temperature)
+                ->forHumidity($humidity)
+                ->orderByPriority();
+            
+            $results = $query->get();
+            
+            // Verify results using matchesConditions method
+            $verifiedResults = $results->filter(function($rule) use ($temperature, $humidity) {
+                return $rule->matchesConditions($temperature, $humidity);
+            });
+           
+            return $verifiedResults;
+        } catch (\Throwable $th) {
+            Log::error('findMatchingRules', [
+                'temperature' => $temperature,
+                'humidity' => $humidity,
+                'error' => $th->getMessage(),
+                'trace' => $th->getTraceAsString()
+            ]);
+            return collect();
         }
-
-        return $query->get();
     }
 
     /**
@@ -98,7 +150,7 @@ class WeatherConditionRuleService
                 'suggestion_reason' => 'Nhiệt độ cao trên 30°C - phù hợp với các món ăn mát, nhẹ để giải nhiệt',
                 'priority' => 5
             ],
-
+            
             // Nhiệt độ cao độ ẩm cao (24-30°C, >70%)
             [
                 'name' => 'Nhiệt độ cao độ ẩm cao',
@@ -112,7 +164,7 @@ class WeatherConditionRuleService
                 'suggestion_reason' => 'Nhiệt độ cao (24-30°C) và độ ẩm cao (>70%) - gợi ý các món nhẹ như súp và salad để giải nhiệt',
                 'priority' => 4
             ],
-
+            
             // Nhiệt độ cao độ ẩm thấp (24-30°C, <70%)
             [
                 'name' => 'Nhiệt độ cao độ ẩm thấp',
@@ -126,7 +178,7 @@ class WeatherConditionRuleService
                 'suggestion_reason' => 'Nhiệt độ cao (24-30°C) và độ ẩm thấp (<70%) - gợi ý các món nước và món chế biến nhanh',
                 'priority' => 4
             ],
-
+            
             // Nhiệt độ mát (15-24°C)
             [
                 'name' => 'Nhiệt độ mát mẻ',
@@ -140,7 +192,7 @@ class WeatherConditionRuleService
                 'suggestion_reason' => 'Thời tiết mát mẻ (15-24°C) - gợi ý các món ăn đa dạng, cân bằng dinh dưỡng',
                 'priority' => 3
             ],
-
+            
             // Nhiệt độ lạnh (< 15°C)
             [
                 'name' => 'Nhiệt độ lạnh',
@@ -154,7 +206,7 @@ class WeatherConditionRuleService
                 'suggestion_reason' => 'Thời tiết lạnh (dưới 15°C) - phù hợp với các món ăn nóng, giàu dinh dưỡng để giữ ấm',
                 'priority' => 5
             ],
-
+            
             // Độ ẩm cao (>80%)
             [
                 'name' => 'Độ ẩm cao',
@@ -168,7 +220,7 @@ class WeatherConditionRuleService
                 'suggestion_reason' => 'Độ ẩm cao (>80%) - gợi ý các món ăn khô, cay để cân bằng',
                 'priority' => 3
             ],
-
+            
             // Độ ẩm thấp (<40%)
             [
                 'name' => 'Độ ẩm thấp',
@@ -181,19 +233,6 @@ class WeatherConditionRuleService
                 'suggested_tags' => $this->getTagIds(['nước', 'canh', 'súp', 'mát']),
                 'suggestion_reason' => 'Độ ẩm thấp (<40%) - gợi ý các món ăn có nước, mát để bổ sung độ ẩm',
                 'priority' => 3
-            ],
-            // Nóng khô rất cao (>=32°C, độ ẩm <=60%)
-            [
-                'name' => 'Nóng khô rất cao',
-                'description' => 'Nhiệt độ >= 32°C và độ ẩm <= 60%',
-                'temperature_min' => 32,
-                'temperature_max' => null,
-                'humidity_min' => null,
-                'humidity_max' => 60,
-                'suggested_categories' => $this->getCategoryIds(['Canh', 'Súp', 'Món nước', 'Cháo']),
-                'suggested_tags' => $this->getTagIds(['nước', 'canh', 'súp', 'cháo', 'dễ tiêu']),
-                'suggestion_reason' => 'Trời nóng khô (>=32°C, ẩm <=60%) - ưu tiên món có nước để bù ẩm',
-                'priority' => 6
             ]
         ];
 
@@ -233,7 +272,7 @@ class WeatherConditionRuleService
     public function getSuggestionReason($temperature, $humidity = null)
     {
         $matchingRules = $this->findMatchingRules($temperature, $humidity);
-
+        
         if ($matchingRules->isEmpty()) {
             return 'Không có quy tắc phù hợp cho điều kiện thời tiết hiện tại';
         }
@@ -279,4 +318,4 @@ class WeatherConditionRuleService
             }
         }
     }
-}
+} 

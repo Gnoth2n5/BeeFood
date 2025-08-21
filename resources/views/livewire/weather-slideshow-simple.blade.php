@@ -1,11 +1,11 @@
-<div class="py-12 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+<div class="py-12 mt-[5%] bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div class="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8">
         <!-- Main Container with White Background -->
         <div class="bg-white rounded-xl shadow-lg overflow-hidden">
             <!-- Header Section -->
-            <div class="bg-gradient-to-r from-orange-500 to-red-500 text-white px-8 py-6">
+            <div class="bg-gradient-to-br from-orange-100 to-red-100 text-black px-8 py-6">
                 <div class="text-center">
-                    <h2 class="text-3xl font-bold mb-2">
+                    <h2 class="text-3xl text-black font-bold mb-2">
                         🌤️ Món Ăn Phù Hợp Với Thời Tiết
                     </h2>
                     <p class="text-lg opacity-90 max-w-2xl mx-auto">
@@ -19,19 +19,20 @@
                         <div class="text-center space-y-3">
                             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                                 <button onclick="showLocationModal()" 
-                                        class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white text-sm font-medium rounded-lg transition-colors">
+                                        class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-black text-sm font-medium rounded-lg transition-colors">
                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" />
                                     </svg>
                                     Lấy vị trí của tôi
                                 </button>
                                 <button wire:click="randomCity" 
-                                        class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white text-sm font-medium rounded-lg transition-colors">
+                                        class="inline-flex items-center px-4 py-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-black text-sm font-medium rounded-lg transition-colors">
                                     <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clip-rule="evenodd" />
                                     </svg>
                                     Chọn ngẫu nhiên
                                 </button>
+                                
                             </div>
                             <p class="text-xs opacity-75">Click để lấy vị trí hoặc chọn thành phố ngẫu nhiên</p>
                         </div>
@@ -46,11 +47,7 @@
                                 </svg>
                                 <span class="text-sm font-medium">Thành phố hiện tại: {{ $nearestCity->name }}</span>
                             </div>
-                            @if(session('user_location.is_random'))
-                                <p class="text-xs opacity-75">Được chọn ngẫu nhiên</p>
-                            @else
-                                <p class="text-xs opacity-75">Dựa trên vị trí của bạn</p>
-                            @endif
+                            
                         </div>
                     </div>
                 @endif
@@ -79,11 +76,12 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    @if($weatherData)
-                                        <p class="text-sm text-gray-600 mt-1">{{ $weatherData['weather_description'] ?? 'Thời tiết đẹp' }}</p>
-                                    @endif
+                                    
                                 </div>
                             </div>
+
+
+
                             <div class="flex items-center space-x-8">
                                 @if($weatherData)
                                     <div class="text-center">
@@ -98,9 +96,11 @@
                                     </div>
                                 @endif
                                 <div class="text-center">
-                                    <p class="text-sm text-gray-800 bg-gradient-to-r from-orange-100 to-red-100 px-4 py-2 rounded-full shadow-sm border border-orange-200">
-                                        Món phù hợp với thời tiết
+                                @if($weatherData)
+                                    <p class="text-md text-gray-800 bg-gradient-to-r from-orange-100 to-red-100 px-4 py-2 rounded-full shadow-sm border border-orange-200">
+                                    {{ $weatherData['weather_description'] ?? 'Thời tiết đẹp' }}
                                     </p>
+                                    @endif
                                 </div>
                             </div>
                         </div>
@@ -109,7 +109,7 @@
                     <!-- Slideshow Container -->
                     <div class="relative bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
                         <!-- Slides -->
-                        <div class="relative h-96">
+                        <div class="relative h-[31rem]">
                             @foreach($recipes as $index => $recipe)
                                 <div class="absolute inset-0 transition-opacity duration-500 ease-in-out {{ $index === $currentSlide ? 'opacity-100' : 'opacity-0' }}"
                                      id="slide-{{ $index }}">
@@ -126,6 +126,7 @@
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 002 2z"></path>
                                                     </svg>
                                                 </div>
+                                              
                                             @endif
                                             <div class="absolute top-4 left-4">
                                                 <span class="bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
@@ -236,6 +237,81 @@
     </style>
 
     <script>
+        // Browser Session Storage Functions
+        function storeUserLocationInSession(locationData) {
+            try {
+                sessionStorage.setItem('user_location', JSON.stringify(locationData));
+                console.log('User location stored in session storage:', locationData);
+            } catch (error) {
+                console.error('Error storing user location in session storage:', error);
+            }
+        }
+
+        function getUserLocationFromSession() {
+            try {
+                const locationData = sessionStorage.getItem('user_location');
+                if (locationData) {
+                    return JSON.parse(locationData);
+                }
+                return null;
+            } catch (error) {
+                console.error('Error reading user location from session storage:', error);
+                return null;
+            }
+        }
+
+        // Function to clear user location from session storage
+        function clearUserLocationFromSession() {
+            try {
+                sessionStorage.removeItem('user_location');
+                console.log('User location cleared from session storage');
+                // Reset the display
+                const locationInfoElement = document.getElementById('location-source-info');
+                if (locationInfoElement) {
+                    locationInfoElement.innerHTML = '<p class="text-xs opacity-75">Đang kiểm tra...</p>';
+                }
+            } catch (error) {
+                console.error('Error clearing user location from session storage:', error);
+            }
+        }
+
+        // Debug function to show current session storage content
+        function debugSessionStorage() {
+            const userLocation = getUserLocationFromSession();
+            console.log('Current session storage content:', userLocation);
+            if (userLocation) {
+                console.log('Location details:', {
+                    city: userLocation.nearest_city_name,
+                    code: userLocation.nearest_city_code,
+                    coordinates: `${userLocation.latitude}, ${userLocation.longitude}`,
+                    isRandom: userLocation.is_random || false
+                });
+            }
+        }
+
+        // Function to check if user location exists in browser session storage
+        function checkBrowserSessionStorage() {
+            const userLocation = getUserLocationFromSession();
+            if (userLocation) {
+                console.log('Found user location in browser session storage:', userLocation);
+                // Set the location data in Livewire component
+                @this.setUserLocationFromSession(
+                    userLocation.latitude,
+                    userLocation.longitude,
+                    userLocation.nearest_city_code,
+                    userLocation.nearest_city_name,
+                    userLocation.is_random || false
+                );
+                return userLocation;
+            } else {
+                console.log('No user location found in session storage, getting location...');
+                // Only get location if no data exists in session storage
+                showLocationModal();
+            }
+            return null;
+        }
+
+        // Function to show location modal
     // Hàm hiển thị modal chia sẻ vị trí với SweetAlert
     function showLocationModal() {
         Swal.fire({
@@ -330,12 +406,34 @@
     }
 
     document.addEventListener('livewire:init', () => {
-        // Tự động lấy vị trí khi component được load
-        Livewire.on('auto-get-location', () => {
-            showLocationModal();
+        // Check browser session storage when component loads
+        Livewire.on('check-browser-session-storage', () => {
+            const userLocation = checkBrowserSessionStorage();
+            if (userLocation) {
+                console.log('User location found in browser session storage:', userLocation);
+                // You can use this data to pre-populate the component if needed
+            }
         });
 
-        // Xử lý khi người dùng click nút lấy vị trí thủ công
+        // Store user location in browser session storage
+        Livewire.on('store-user-location', (locationData) => {
+            storeUserLocationInSession(locationData);
+            updateLocationSourceInfo(locationData);
+        });
+
+        // Function to update location source info display
+        function updateLocationSourceInfo(locationData) {
+            const locationInfoElement = document.getElementById('location-source-info');
+            if (locationInfoElement && locationData) {
+                if (locationData.is_random) {
+                    locationInfoElement.innerHTML = '<p class="text-xs opacity-75">Được chọn ngẫu nhiên</p>';
+                } else {
+                    locationInfoElement.innerHTML = '<p class="text-xs opacity-75">Dựa trên vị trí của tôi</p>';
+                }
+            }
+        }
+
+        // Handle manual location button click
         Livewire.on('get-user-location', () => {
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(

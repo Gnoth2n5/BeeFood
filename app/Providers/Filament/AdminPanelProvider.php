@@ -13,6 +13,9 @@ use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use App\Filament\Widgets\StatsOverview;
 use App\Filament\Widgets\LatestRecipes;
+use App\Filament\Widgets\PaymentStatsWidget;
+use App\Filament\Resources\ShopItemResource;
+use App\Filament\Resources\PaymentResource;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -71,6 +74,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->font('Inter')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->resources([
+                ShopItemResource::class,
+                PaymentResource::class,
+            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 \App\Filament\Pages\Dashboard::class,
@@ -79,6 +86,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 StatsOverview::class,
                 LatestRecipes::class,
+                PaymentStatsWidget::class,
                 Widgets\AccountWidget::class,
             ])
             ->middleware([

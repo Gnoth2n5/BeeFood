@@ -37,6 +37,7 @@ class Recipe extends Model
         'meta_title',
         'meta_description',
         'meta_keywords',
+        'embedding',
         'view_count',
         'favorite_count',
         'rating_count',
@@ -59,7 +60,8 @@ class Recipe extends Model
         'view_count' => 'integer',
         'favorite_count' => 'integer',
         'rating_count' => 'integer',
-        'average_rating' => 'decimal:2'
+        'average_rating' => 'decimal:2',
+        'embedding' => 'array'
     ];
 
     /**
@@ -300,6 +302,42 @@ class Recipe extends Model
     public function getPrimaryImageAttribute()
     {
         return $this->images()->where('is_primary', true)->first() ?? $this->images()->first();
+    }
+
+    /**
+     * Get the featured image URL.
+     */
+    public function getFeaturedImageUrlAttribute()
+    {
+        if (!$this->featured_image) {
+            return null;
+        }
+        
+        return asset('storage/' . $this->featured_image);
+    }
+
+    /**
+     * Get the featured image URL for Filament forms.
+     */
+    public function getFeaturedImageAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        
+        return $value;
+    }
+
+    /**
+     * Get the featured image for Filament forms.
+     */
+    public function getFeaturedImageForFormsAttribute()
+    {
+        if (!$this->featured_image) {
+            return null;
+        }
+        
+        return $this->featured_image;
     }
 
     /**

@@ -1,15 +1,26 @@
 <div class="min-h-screen bg-gray-50">
     <!-- Header Section -->
     <div class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div class="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div class="flex items-center justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-900">Công Thức Nấu Ăn</h1>
                     <p class="text-sm text-gray-600 mt-1">Khám phá hàng nghìn công thức nấu ăn ngon</p>
                 </div>
                 
-                <!-- View Mode Toggle -->
-                <div class="flex items-center space-x-2">
+                <!-- Action Buttons -->
+                <div class="flex items-center space-x-3">
+                    @auth
+                        <a href="{{ route('recipes.create') }}"
+                           class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                            </svg>
+                            Tạo công thức
+                        </a>
+                    @endauth
+                    
+                    <!-- View Mode Toggle -->
                     <button 
                         wire:click="toggleViewMode"
                         class="p-2 rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors"
@@ -30,7 +41,7 @@
         </div>
     </div>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div class="max-w-10xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <div class="flex gap-6">
             <!-- Sidebar Filters -->
             <div class="w-80 flex-shrink-0">

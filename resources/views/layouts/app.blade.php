@@ -14,8 +14,21 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
+        <!-- Preload critical resources -->
+        <link rel="preload" href="{{ asset('build/assets/app-fxacCLXp.css') }}" as="style">
+        <link rel="preload" href="{{ asset('build/assets/app-DqbBmj3H.js') }}" as="script">
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+        
+        <!-- Image optimization -->
+        <style>
+            img {
+                loading: lazy;
+                max-width: 100%;
+                height: auto;
+            }
+        </style>
     </head>
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-gray-100">
@@ -27,7 +40,7 @@
             <!-- Page Heading -->
             @if (isset($header))
                 <header class="bg-white shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    <div class="max-w-10xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
@@ -42,7 +55,7 @@
                 @endif
             </main>
             <x-footer />
-
+            
             <!-- OpenAI Quick Chat Button (show on all pages except AI chat) -->
             @unless(request()->routeIs('openai.*'))
                 <x-openai-quick-chat />
@@ -128,11 +141,5 @@
 
         });
         </script>
-
-        <!-- Ingredient Substitute Modal -->
-        <x-ingredient-substitute-modal />
-        
-        <!-- Ingredient Substitute JavaScript -->
-        <script src="{{ asset('js/ingredient-substitute.js') }}"></script>
     </body>
 </html>

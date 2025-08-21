@@ -67,8 +67,10 @@ return new class extends Migration
             $table->index('average_rating');
             $table->index('view_count');
             
-            // Full-text search index
-            $table->fullText(['title', 'description', 'summary']);
+            // Full-text search index (only for MySQL/MariaDB)
+            if (config('database.default') !== 'sqlite') {
+                $table->fullText(['title', 'description', 'summary']);
+            }
         });
     }
 

@@ -1,0 +1,57 @@
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use App\Models\Session;
+
+class SessionDumpSeeder extends Seeder
+{
+    /**
+     * Run the seeder.
+     */
+    public function run(): void
+    {
+        // Clear existing data
+        DB::table('sessions')->truncate();
+
+        // Insert data
+        $data = [
+            [
+                'id' => 'Es48zvnvps5bw0kK9bUx2IW14SpQCjbyzyMo4yRj',
+                'user_id' => null,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+                'payload' => 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiT2lDQ21veVFpVW1wUW1zeG9ScFByd3pORGJXNk5PUTlzU2dEQlh3TiI7czoyMjoiUEhQREVCVUdCQVJfU1RBQ0tfREFUQSI7YTowOnt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==',
+                'last_activity' => 1755755852,
+            ],
+            [
+                'id' => 'MudUdJZ9lNKLHdIbTdzFVXzAgRrq2qIfQe3GS7Q5',
+                'user_id' => 1,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+                'payload' => 'YTo2OntzOjY6Il90b2tlbiI7czo0MDoieGtiTDhhUDFJV2lWMDU5WXZTcUpUSTRTOWNKbTFWd251M21pWWg5ZSI7czozOiJ1cmwiO2E6MDp7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtpOjE7czoxNzoicGFzc3dvcmRfaGFzaF93ZWIiO3M6NjA6IiQyeSQxMiRuSUFGdkRzUXc2Y05VQzVVWmdGL1p1UnBzbG1XUTZrSXpnaDBPeXNOeW1ZZ211dGIyeFV6RyI7czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzM6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC9hZG1pbi91c2VycyI7fX0=',
+                'last_activity' => 1755757699,
+            ],
+            [
+                'id' => 'uksZ5PiMYtWHriD6gxD42B3UJwRzSGLNX9LCCL0a',
+                'user_id' => 9,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/139.0.0.0 Safari/537.36',
+                'payload' => 'YTo5OntzOjY6Il90b2tlbiI7czo0MDoiNmU3ZHpRMmpsTXg4d3E5dXJoQWJJckRyOUprS1FEUjFZVWZ5Z1l1SyI7czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzQ6Imh0dHA6Ly9sb2NhbGhvc3Q6ODAwMC9zaG9wcy90ZXN0LTkiO31zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7aTo5O3M6MTM6InVzZXJfbG9jYXRpb24iO2E6NDp7czo4OiJsYXRpdHVkZSI7ZDoyMC45OTQ0NTc2O3M6OToibG9uZ2l0dWRlIjtkOjEwNS43OTE0ODg7czoxNzoibmVhcmVzdF9jaXR5X2NvZGUiO3M6MToiMSI7czoxNzoibmVhcmVzdF9jaXR5X25hbWUiO3M6MjI6IlRow6BuaCBwaOG7kSBIw6AgTuG7mWkiO31zOjE5OiJvcGVuYWlfY29udmVyc2F0aW9uIjthOjQ6e2k6MDthOjQ6e3M6NDoicm9sZSI7czo0OiJ1c2VyIjtzOjc6ImNvbnRlbnQiO3M6NTM6InTDtGkgYuG7iyB0aeG7g3UgxJHGsOG7nW5nIGjDtG0gbmF5IHTDtGkgbsOqbiDEg24gZ8OsIjtzOjk6InRpbWVzdGFtcCI7czoyNzoiMjAyNS0wOC0yMVQwNjoxNToxNy4xNzg2MDVaIjtzOjg6ImlzX2Vycm9yIjtiOjA7fWk6MTthOjU6e3M6NDoicm9sZSI7czo5OiJhc3Npc3RhbnQiO3M6NzoiY29udGVudCI7czo3Mzg6Ilbhu5tpIHTDrG5oIHRy4bqhbmcgdGnhu4N1IMSRxrDhu51uZywgYuG6oW4gbsOqbiDGsHUgdGnDqm4gY8OhYyBtw7NuIMOtdCDEkcaw4budbmcgdsOgIHRpbmggYuG7mXQsIGdpw6B1IGNo4bqldCB4xqEgdsOgIMSR4bqhbS4gRMaw4bubaSDEkcOieSBsw6AgMyBn4bujaSDDvSBwaMO5IGjhu6NwOgoKMS4gKipH4buPaSBjdeG7kW4gdMO0bSB0aOG7i3QqKiAtIE3Ds24gbsOgeSDDrXQgdGluaCBi4buZdCAoY2jhu4kgMSBs4bubcCBiw6FuaCB0csOhbmcgbeG7j25nKSwgZ2nDoHUgxJHhuqFtIHThu6sgdMO0bSB0aOG7i3QgdsOgIGNo4bqldCB4xqEgdOG7qyByYXUgc+G7kW5nLgoKMi4gKipUaOG7i3QgbHXhu5ljKiogLSBOZ3Xhu5NuIMSR4bqhbSB04buRdCwgY8OzIHRo4buDIMSDbiBrw6htIHJhdSB4YW5oLCBob8OgbiB0b8OgbiBraMO0bmcgY8OzIHRpbmggYuG7mXQgaGF5IMSRxrDhu51uZy4KCjMuICoqQ8ahbSB04bqlbSBTw6BpIEfDsm4qKiAtIEPDsyB0aOG7gyDEkWnhu4F1IGNo4buJbmggYuG6sW5nIGPDoWNoIGdp4bqjbSBsxrDhu6NuZyBjxqFtIHThuqVtIChn4bqhbyBs4bupdCBz4bq9IHThu5F0IGjGoW4pLCB0xINuZyBwaOG6p24gcmF1IHbDoCB0aOG7i3QgbuG6oWMuCgpMxrB1IMO9IG7Dqm4gaOG6oW4gY2jhur8gbcOzbiBjaMOoIG3DrXQgxJHDoWMgKG5oaeG7gXUgxJHGsOG7nW5nKSB2w6AgYsOhbmggbcOsIHRo4buLdCBuxrDhu5tuZyAobmhp4buBdSB0aW5oIGLhu5l0KSBuaMOpISI7czo5OiJ0aW1lc3RhbXAiO3M6Mjc6IjIwMjUtMDgtMjFUMDY6MTU6MTcuMTc4ODM5WiI7czo4OiJpc19lcnJvciI7YjowO3M6NzoicmVjaXBlcyI7YTo1OntpOjA7YTo4OntzOjI6ImlkIjtpOjg7czo1OiJ0aXRsZSI7czoxNToiQ2jDqCBtw610IMSRw6FjIjtzOjc6InN1bW1hcnkiO3M6MTI0OiJDaMOoIG3DrXQgxJHDoWMgbmfhu410IG3DoXQsIGdpw7JuIGRhaSwga+G6v3QgaOG7o3AgbcOtdCBjaMOtbiB2w6AgaOG6oXQgxJHDoWMsIHRow61jaCBo4bujcCDEkeG7gyBnaeG6o2kgbmhp4buHdCBuZ8OgeSBow6guIjtzOjQ6InNsdWciO3M6MTE6ImNoZS1taXQtZGFjIjtzOjE0OiJmZWF0dXJlZF9pbWFnZSI7czozODoicmVjaXBlcy8wMUszM0g5Mk5TOFYwS1ZENEtONEgyS0pQQy5qcGciO3M6MTI6ImNvb2tpbmdfdGltZSI7aToyMDtzOjE2OiJkaWZmaWN1bHR5X2xldmVsIjtOO3M6MTA6InNpbWlsYXJpdHkiO2Q6MC43OTU5MjY7fWk6MTthOjg6e3M6MjoiaWQiO2k6MztzOjU6InRpdGxlIjtzOjIwOiJDxqFtIFThuqVtIFPDoGkgR8OybiI7czo3OiJzdW1tYXJ5IjtzOjYxOiJDxqFtIHThuqVtIFPDoGkgR8OybiAtIG3Ds24gxINuIHPDoW5nIHBo4buVIGJp4bq/biBtaeG7gW4gTmFtIjtzOjQ6InNsdWciO3M6MTU6ImNvbS10YW0tc2FpLWdvbiI7czoxNDoiZmVhdHVyZWRfaW1hZ2UiO3M6Mzg6InJlY2lwZXMvMDFLMjRWNzhCQlhIRjkwRE5OMzIwMzMyWEYuanBnIjtzOjEyOiJjb29raW5nX3RpbWUiO2k6NjA7czoxNjoiZGlmZmljdWx0eV9sZXZlbCI7TjtzOjEwOiJzaW1pbGFyaXR5IjtkOjAuNzkzNzc1O31pOjI7YTo4OntzOjI6ImlkIjtpOjc7czo1OiJ0aXRsZSI7czoxMzoiVGjhu4t0IGx14buZYyI7czo3OiJzdW1tYXJ5IjtzOjExMzoiTcOzbiB0aOG7i3QgbHXhu5ljIG3hu4FtIG5n4buNdCwgZOG7hSDEg24sIHRoxrDhu51uZyBr4bq/dCBo4bujcCB24bubaSByYXUgc+G7kW5nIHbDoCBuxrDhu5tjIGNo4bqlbSDEkeG6rW0gxJHDoC4iO3M6NDoic2x1ZyI7czo5OiJ0aGl0LWx1b2MiO3M6MTQ6ImZlYXR1cmVkX2ltYWdlIjtzOjUyOiJyZWNpcGVzL2N2b2tQclFhdEdzbzU3Z3N6V3JabVI2VGhMUzM0eWFXZjZWT1NzcGouanBnIjtzOjEyOiJjb29raW5nX3RpbWUiO2k6MzA7czoxNjoiZGlmZmljdWx0eV9sZXZlbCI7TjtzOjEwOiJzaW1pbGFyaXR5IjtkOjAuNzkyODMxO31pOjM7YTo4OntzOjI6ImlkIjtpOjU7czo1OiJ0aXRsZSI7czoyNDoiR+G7j2kgQ3Xhu5FuIFTDtG0gVGjhu4t0IjtzOjc6InN1bW1hcnkiO3M6MTI0OiJH4buPaSBjdeG7kW4gdMO0bSB0aOG7i3QgdGhhbmggbcOhdCwgxJHhuqd5IMSR4bunIGRpbmggZMaw4buhbmcgduG7m2kgdMO0bSwgdGjhu4t0LCByYXUgdsOgIGLDum4sIGN14buRbiB0cm9uZyBiw6FuaCB0csOhbmcuIjtzOjQ6InNsdWciO3M6MTc6ImdvaS1jdW9uLXRvbS10aGl0IjtzOjE0OiJmZWF0dXJlZF9pbWFnZSI7czozODoicmVjaXBlcy8wMUsyNFZBR0UxR1AyNllKSE5KUlJCQ1IwUC5qcGciO3M6MTI6ImNvb2tpbmdfdGltZSI7aToyNTtzOjE2OiJkaWZmaWN1bHR5X2xldmVsIjtOO3M6MTA6InNpbWlsYXJpdHkiO2Q6MC43OTA5Mjt9aTo0O2E6ODp7czoyOiJpZCI7aTo0O3M6NToidGl0bGUiO3M6MjU6IkLDoW5oIE3DrCBUaOG7i3QgTsaw4bubbmciO3M6Nzoic3VtbWFyeSI7czo4Njoi4buUIGLDoW5oIG3DrCBnacOybiBy4bulbSB24bubaSB0aOG7i3Qgbsaw4bubbmcgdGjGoW0gbOG7q25nIHbDoCByYXUgY+G7pyB0xrDGoWkgbcOhdC4iO3M6NDoic2x1ZyI7czoxODoiYmFuaC1taS10aGl0LW51b25nIjtzOjE0OiJmZWF0dXJlZF9pbWFnZSI7czozODoicmVjaXBlcy8wMUsyNFY4TjQ0SlY2WFROVzZROUs0NjRBMS5qcGciO3M6MTI6ImNvb2tpbmdfdGltZSI7aTozMDtzOjE2OiJkaWZmaWN1bHR5X2xldmVsIjtOO3M6MTA6InNpbWlsYXJpdHkiO2Q6MC43OTA1MzY7fX19aToyO2E6NDp7czo0OiJyb2xlIjtzOjQ6InVzZXIiO3M6NzoiY29udGVudCI7czo3MDoiSMO0bSBuYXkgdMO0aSBtdeG7kW4gxINuIHBo4bufIGLhuqFuIGPDsyDEkeG7gSB4deG6pXQgbcOzbiBuw6BvIGtow7RuZyI7czo5OiJ0aW1lc3RhbXAiO3M6Mjc6IjIwMjUtMDgtMjFUMDY6MTU6MTcuMTc4ODg2WiI7czo4OiJpc19lcnJvciI7YjowO31pOjM7YTo1OntzOjQ6InJvbGUiO3M6OToiYXNzaXN0YW50IjtzOjc6ImNvbnRlbnQiO3M6NTg4OiJIw7RtIG5heSBi4bqhbiBtdeG7kW4gxINuIHBo4bufLCBtw6xuaCBjw7MgxJHhu4EgeHXhuqV0IG3Ds24gIlBo4bufIELDsiBWaeG7h3QgTmFtIiAtIG3Ds24gxINuIHF14buRYyBo4buTbiBxdeG7kWMgdMO6eSB24bubaSBuxrDhu5tjIGTDuW5nIMSR4bqtbSDEkcOgLCB0aMahbSBuZ29uLiDEkMOieSBsw6AgbOG7sWEgY2jhu41uIGhvw6BuIGjhuqNvIG5o4bqldCB2w6wgxJHDum5nIHnDqnUgY+G6p3UgcGjhu58gY+G7p2EgYuG6oW4sIMSR4buTbmcgdGjhu51pIGzDoCBtw7NuIMSR4bq3YyB0csawbmcgbmjhuqV0IHRyb25nIGRhbmggc8OhY2guIAoKTuG6v3UgbXXhu5FuIMSR4buVaSB24buLLCBi4bqhbiBjw7MgdGjhu4MgdGhhbSBraOG6o28gdGjDqm06CjEuIELDum4gQ2jhuqMgSMOgIE7hu5lpIC0gY8WpbmcgbMOgIG3Ds24gbsaw4bubYyDEkeG6t2MgdHLGsG5nCjIuIEfhu49pIEN14buRbiBUw7RtIFRo4buLdCAtIG3Ds24gY3Xhu5FuIHRoYW5oIG3DoXQKTmjGsG5nIFBo4bufIELDsiB24bqrbiBsw6Agc+G7sSBs4buxYSBjaOG7jW4gdOG7kWkgxrB1IG5o4bqldCBjaG8gecOqdSBj4bqndSBj4bunYSBi4bqhbiBow7RtIG5heSEiO3M6OToidGltZXN0YW1wIjtzOjI3OiIyMDI1LTA4LTIxVDA2OjE1OjE3LjE3ODkzNloiO3M6ODoiaXNfZXJyb3IiO2I6MDtzOjc6InJlY2lwZXMiO2E6Mzp7aTowO2E6ODp7czoyOiJpZCI7aToxO3M6NToidGl0bGUiO3M6MjA6IlBo4bufIELDsiBWaeG7h3QgTmFtIjtzOjc6InN1bW1hcnkiO3M6NTY6IlBo4bufIGLDsiBWaeG7h3QgTmFtIC0gbcOzbiDEg24gcXXhu5FjIGjhu5NuIHF14buRYyB0w7p5IjtzOjQ6InNsdWciO3M6MTU6InBoby1iby12aWV0LW5hbSI7czoxNDoiZmVhdHVyZWRfaW1hZ2UiO3M6Mzg6InJlY2lwZXMvMDFLMjRWMjBTOVdOTVBSQ00zNDBTWkc3MU0uanBnIjtzOjEyOiJjb29raW5nX3RpbWUiO2k6MTIwO3M6MTY6ImRpZmZpY3VsdHlfbGV2ZWwiO047czoxMDoic2ltaWxhcml0eSI7ZDowLjgzNTI4Mzt9aToxO2E6ODp7czoyOiJpZCI7aTo1O3M6NToidGl0bGUiO3M6MjQ6Ikfhu49pIEN14buRbiBUw7RtIFRo4buLdCI7czo3OiJzdW1tYXJ5IjtzOjEyNDoiR+G7j2kgY3Xhu5FuIHTDtG0gdGjhu4t0IHRoYW5oIG3DoXQsIMSR4bqneSDEkeG7pyBkaW5oIGTGsOG7oW5nIHbhu5tpIHTDtG0sIHRo4buLdCwgcmF1IHbDoCBiw7puLCBjdeG7kW4gdHJvbmcgYsOhbmggdHLDoW5nLiI7czo0OiJzbHVnIjtzOjE3OiJnb2ktY3Vvbi10b20tdGhpdCI7czoxNDoiZmVhdHVyZWRfaW1hZ2UiO3M6Mzg6InJlY2lwZXMvMDFLMjRWQUdFMUdQMjZZSkhOSlJSQkNSMFAuanBnIjtzOjEyOiJjb29raW5nX3RpbWUiO2k6MjU7czoxNjoiZGlmZmljdWx0eV9sZXZlbCI7TjtzOjEwOiJzaW1pbGFyaXR5IjtkOjAuODA1MTU7fWk6MjthOjg6e3M6MjoiaWQiO2k6MjtzOjU6InRpdGxlIjtzOjIwOiJCw7puIENo4bqjIEjDoCBO4buZaSI7czo3OiJzdW1tYXJ5IjtzOjYyOiJCw7puIGNo4bqjIEjDoCBO4buZaSAtIG3Ds24gxINuIMSR4bq3YyB0csawbmcgY+G7p2EgdGjhu6cgxJHDtCI7czo0OiJzbHVnIjtzOjE0OiJidW4tY2hhLWhhLW5vaSI7czoxNDoiZmVhdHVyZWRfaW1hZ2UiO3M6Mzg6InJlY2lwZXMvMDFLMjRWNUhQSlFEREdRODk5QTc3Q0pOSEguanBnIjtzOjEyOiJjb29raW5nX3RpbWUiO2k6NDU7czoxNjoiZGlmZmljdWx0eV9sZXZlbCI7TjtzOjEwOiJzaW1pbGFyaXR5IjtkOjAuODAxMTk5O319fX1zOjE3OiJwYXNzd29yZF9oYXNoX3dlYiI7czo2MDoiJDJ5JDEyJFZhZmRVYWRITnlabmpqS2JSdUV2aHU4MXIwazlQbkkwaFZyQmlnUkNiZFprZWhabEZ5V0ZhIjtzOjg6ImZpbGFtZW50IjthOjA6e31zOjIyOiJQSFBERUJVR0JBUl9TVEFDS19EQVRBIjthOjA6e319',
+                'last_activity' => 1755758547,
+            ],
+            [
+                'id' => 'Wlkpf1HW0x0TVMFHEYne26Si5E70nkQkGY2o9PjO',
+                'user_id' => null,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'WhatsApp/2',
+                'payload' => 'YTo0OntzOjY6Il90b2tlbiI7czo0MDoiZGM0WHhHa29Dc3FjQ0ZPdVVrMjR2ZG9laXZyZWZUUmRVT3czSDR0YyI7czoyMjoiUEhQREVCVUdCQVJfU1RBQ0tfREFUQSI7YTowOnt9czo5OiJfcHJldmlvdXMiO2E6MTp7czozOiJ1cmwiO3M6MzQ6Imh0dHA6Ly81YjY1NGQyNmZiMjEubmdyb2stZnJlZS5hcHAiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19',
+                'last_activity' => 1755755475,
+            ],
+        ];
+
+        DB::table('sessions')->insert($data);
+    }
+}

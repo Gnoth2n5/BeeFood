@@ -15,6 +15,9 @@ use App\Models\Rating;
 use App\Models\Favorite;
 use App\Models\Collection;
 use App\Models\Post;
+use App\Models\Payment;
+use App\Models\UserShop;
+use App\Models\VipPost;
 use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable
@@ -117,6 +120,34 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the comments for the user.
+     */
+    public function comments()
+    {
+        return $this->hasMany(Comment::class);
+    }
+
+    /**
+     * Payments made by the user.
+     */
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * User shop (VIP shop) 1:1
+     */
+    public function shop()
+    {
+        return $this->hasOne(UserShop::class);
+    }
+
+    /**
+     * VIP posts created by the user.
+     */
+
+    /**
      * Get the user's avatar URL, prioritizing Google avatar if available.
      */
     public function getAvatarUrl()
@@ -159,6 +190,12 @@ class User extends Authenticatable
         return $this->avatar && !filter_var($this->avatar, FILTER_VALIDATE_URL);
     }
 
-  
+    /**
+     * Check if user has VIP account status.
+     */
+    public function getIsVipAccountAttribute()
+    {
+        return $this->profile?->isVipAccount ?? false;
+    }
 
 }
