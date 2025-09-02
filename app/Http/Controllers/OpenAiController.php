@@ -9,7 +9,6 @@ use Illuminate\View\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Log;
 
 class OpenAiController extends Controller
 {
@@ -23,25 +22,16 @@ class OpenAiController extends Controller
      */
     public function index(): View
     {
-        try {
-            return view('openai.index');
-        } catch (\Exception $e) {
-            Log::error('OpenAI connection test failed', [
-                'message' => $e->getMessage(),
-            ]);
+        // Check if DeepSeek is configured
+        if (!$this->openAiService->isConfigured()) {
             abort(503, 'Dịch vụ AI chưa được cấu hình. Vui lòng liên hệ admin.');
         }
 
-        // Check if OpenAI is configured
-        // if (!$this->openAiService->isConfigured()) {
-        //     abort(503, 'Dịch vụ AI chưa được cấu hình. Vui lòng liên hệ admin.');
-        // }
-
-       
+        return view('openai.index');
     }
 
     /**
-     * Send a message to OpenAI and get response
+     * Send a message to DeepSeek and get response
      */
     public function sendMessage(Request $request): JsonResponse
     {

@@ -15,7 +15,6 @@ class UserProfile extends Model
         'address',
         'city',
         'country',
-        'isVipAccount',
         'timezone',
         'language',
         'dietary_preferences',

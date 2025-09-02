@@ -122,39 +122,47 @@
             <!-- Nguyên liệu -->
             <div class="md:col-span-1">
                 <h2 class="text-lg font-semibold mb-3 text-gray-900">Nguyên liệu</h2>
-                <ul class="space-y-2">
-                    @foreach ($recipe->ingredients as $ingredient)
-                        <li class="flex justify-between items-center border-b pb-1">
-                            <span class="text-gray-700">{{ $ingredient['name'] }}</span>
-                            <span class="text-gray-500 text-sm">{{ $ingredient['amount'] ?? '' }}
-                                {{ $ingredient['unit'] ?? '' }}</span>
-                        </li>
-                    @endforeach
-                </ul>
+                @if (!empty($recipe->ingredients) && is_array($recipe->ingredients))
+                    <ul class="space-y-2">
+                        @foreach ($recipe->ingredients as $ingredient)
+                            <li class="flex justify-between items-center border-b pb-1">
+                                <span class="text-gray-700">{{ $ingredient['name'] ?? 'Không có tên' }}</span>
+                                <span class="text-gray-500 text-sm">{{ $ingredient['amount'] ?? '' }}
+                                    {{ $ingredient['unit'] ?? '' }}</span>
+                            </li>
+                        @endforeach
+                    </ul>
+                @else
+                    <p class="text-gray-500 italic">Chưa có thông tin nguyên liệu</p>
+                @endif
             </div>
             <!-- Cách làm -->
             <div class="md:col-span-2">
                 <h2 class="text-lg font-semibold mb-3 text-gray-900">Cách làm</h2>
-                <ol class="space-y-6 list-decimal list-inside">
-                    @foreach ($recipe->instructions as $step)
-                        <li class="flex gap-4 items-start">
-                            <div
-                                class="flex-shrink-0 w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-lg">
-                                {{ $step['step'] ?? $loop->iteration }}</div>
-                            <div>
-                                <div class="font-medium text-gray-800">{{ $step['instruction'] }}</div>
-                                @if (!empty($step['image']))
-                                    <img src="{{ Storage::url($step['image']) }}"
-                                        alt="Bước {{ $step['step'] ?? $loop->iteration }}"
-                                        class="w-28 h-20 object-cover rounded mt-2" />
-                                @endif
-                                @if (!empty($step['time']))
-                                    <div class="text-xs text-gray-500 mt-1">{{ $step['time'] }} phút</div>
-                                @endif
-                            </div>
-                        </li>
-                    @endforeach
-                </ol>
+                @if (!empty($recipe->instructions) && is_array($recipe->instructions))
+                    <ol class="space-y-6 list-decimal list-inside">
+                        @foreach ($recipe->instructions as $step)
+                            <li class="flex gap-4 items-start">
+                                <div
+                                    class="flex-shrink-0 w-8 h-8 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center font-bold text-lg">
+                                    {{ $step['step'] ?? $loop->iteration }}</div>
+                                <div>
+                                    <div class="font-medium text-gray-800">{{ $step['instruction'] ?? 'Không có hướng dẫn' }}</div>
+                                    @if (!empty($step['image']))
+                                        <img src="{{ Storage::url($step['image']) }}"
+                                            alt="Bước {{ $step['step'] ?? $loop->iteration }}"
+                                            class="w-28 h-20 object-cover rounded mt-2" />
+                                    @endif
+                                    @if (!empty($step['time']))
+                                        <div class="text-xs text-gray-500 mt-1">{{ $step['time'] }} phút</div>
+                                    @endif
+                                </div>
+                            </li>
+                        @endforeach
+                    </ol>
+                @else
+                    <p class="text-gray-500 italic">Chưa có hướng dẫn cách làm</p>
+                @endif
             </div>
         </div>
 
@@ -183,17 +191,6 @@
                 <span>{{ $recipe->favorite_count ?? 0 }}</span>
             </div>
             <div class="flex gap-2">
-                <!-- Edit button for recipe owner -->
-                @if(auth()->check() && auth()->user()->can('update', $recipe))
-                    <a href="{{ route('recipes.edit', $recipe) }}"
-                       class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg font-semibold flex items-center gap-2 transition">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                        </svg>
-                        Chỉnh sửa
-                    </a>
-                @endif
-                
                 <!-- Nút chia sẻ -->
                 <button wire:click="openShareModal"
                     class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg font-semibold flex items-center gap-2 transition"

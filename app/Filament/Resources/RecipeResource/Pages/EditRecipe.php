@@ -19,11 +19,6 @@ class EditRecipe extends EditRecord
         $data['category_ids'] = $this->record->categories->pluck('id')->toArray();
         $data['tag_ids'] = $this->record->tags->pluck('id')->toArray();
 
-        // Ensure featured_image is properly formatted for FileUpload component
-        if (isset($data['featured_image']) && $data['featured_image']) {
-            $data['featured_image'] = [$data['featured_image']];
-        }
-
         return $data;
     }
 

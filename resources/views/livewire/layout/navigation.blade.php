@@ -12,6 +12,8 @@ new class extends Component {
         $this->showSearch = !$this->showSearch;
     }
 
+    // Ingredient modal đã chuyển sang JavaScript thuần
+
     public function logout()
     {
         \Log::info('Logout method called');
@@ -32,24 +34,28 @@ new class extends Component {
     }
 }; ?>
 
-<nav class="bg-white border-b border-gray-200 px-4 py-2.5 dark:bg-gray-900 dark:border-gray-700">
-    <div class="flex flex-wrap justify-between items-center">
+<nav class="bg-white/80 dark:bg-[#161615]/80 backdrop-blur-sm border-b border-gray-200 dark:border-[#3E3E3A] px-4 py-3 sticky top-0 z-50">
+    <div class="flex flex-wrap justify-between items-center max-w-7xl mx-auto">
         <div class="flex justify-start items-center">
             <!-- Logo -->
             <a href="{{ route('home') }}"
-                class="flex items-center justify-center mr-4 hover:opacity-80 transition-opacity">
-                <div class="flex items-center space-x-2">
-                    <img src="{{ asset('images/bee-logo.png') }}" alt="logo" class="w-full h-8">
-                    <span class="self-center text-xl font-semibold whitespace-nowrap text-gray-900 dark:text-white">
+                class="flex items-center justify-center mr-6 hover:opacity-80 transition-opacity">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                    </div>
+                    <span class="self-center text-2xl font-bold whitespace-nowrap bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                         BeeFood
                     </span>
                 </div>
             </a>
 
             <!-- Desktop Navigation -->
-            <div class="hidden md:flex items-center space-x-1">
+            <div class="hidden md:flex items-center space-x-2">
                 <a href="{{ route('home') }}"
-                    class="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-500 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('home') ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20' : '' }}">
+                    class="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 {{ request()->routeIs('home') ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50' }}">
                     <div class="flex items-center space-x-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -60,7 +66,7 @@ new class extends Component {
                 </a>
 
                 <a href="{{ route('recipes.index') }}"
-                    class="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-500 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('recipes.index') ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20' : '' }}">
+                    class="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 {{ request()->routeIs('recipes.*') ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50' }}">
                     <div class="flex items-center space-x-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -70,142 +76,143 @@ new class extends Component {
                     </div>
                 </a>
 
-                @auth
-                    <a href="{{ route('recipes.create') }}"
-                        class="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-500 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('recipes.create') ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20' : '' }}">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
-                            </svg>
-                            <span>Tạo công thức</span>
-                        </div>
-                    </a>
-                @endauth
-
-                <a href="{{ route('openai.index') }}"
-                    class="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-500 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('openai.*') ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20' : '' }}">
+                {{-- <a href="{{ route('restaurants.index') }}"
+                    class="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 {{ request()->routeIs('restaurants.*') ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50' }}">
                     <div class="flex items-center space-x-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        <span>AI Trợ lý</span>
+                        <span>Nhà hàng</span>
                     </div>
-                </a>
+                </a> --}}
 
-
-
-                @auth
-                    <a href="{{ route('recipes.my') }}"
-                        class="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-500 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('recipes.my') ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20' : '' }}">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            <span>Công thức của tôi</span>
-                        </div>
-                    </a>
-
-                    <a href="{{ route('favorites.index') }}"
-                        class="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-500 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('favorites.*') ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20' : '' }}">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                            <span>Yêu thích</span>
-                        </div>
-                    </a>
-                @endauth
-                
-                <a href="{{ route('shops.index') }}"
-                    class="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-500 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200 {{ request()->routeIs('shops.*') ? 'bg-orange-50 text-orange-600 dark:bg-orange-900/20' : '' }}">
+                <button onclick="openIngredientSubstituteModal()"
+                    class="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                     <div class="flex items-center space-x-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M5 7l1 12h12l1-12M8 7V5a4 4 0 118 0v2"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                         </svg>
-                        <span>Shop</span>
-                    </div>
-                </a>
-
-                
-            </div>
-        </div>
-
-
-        <!-- Right side items -->
-        <div class="flex items-center lg:order-3">
-            @auth
-                <!-- Notifications -->
-                <button type="button"
-                    class="p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-700">
-                    <span class="sr-only">View notifications</span>
-                    <div class="relative">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path
-                                d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-                        </svg>
-                        <div
-                            class="absolute inline-flex items-center justify-center w-2 h-2 text-xs font-bold text-white bg-red-500 border-2 border-white rounded-full -top-1 -right-1 dark:border-gray-900">
-                        </div>
+                        <span>Thay thế nguyên liệu</span>
                     </div>
                 </button>
 
-                <!-- User menu -->
-                <div class="relative ml-3" x-data="{ open: false }">
-                    <div>
-                        <button type="button" @click="open = !open"
-                            class="flex text-sm bg-gray-800 rounded-full focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600"
-                            id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
-                            data-dropdown-placement="bottom">
-                            <span class="sr-only">Open user menu</span>
-                            @if (auth()->user()->hasAvatar())
-                                <img src="{{ auth()->user()->getAvatarUrl() }}" alt="{{ auth()->user()->name }}"
-                                    class="w-8 h-8 rounded-full object-cover">
-                            @else
-                                <div
-                                    class="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-red-500 flex items-center justify-center">
-                                    <span class="text-sm font-medium text-white">
-                                        {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
-                                    </span>
-                                </div>
-                            @endif
-                        </button>
+                <a href="{{ route('disease-analysis.index') }}"
+                    class="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 {{ request()->routeIs('disease-analysis.*') ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 shadow-sm' : 'hover:bg-gray-50 dark:hover:bg-gray-800/50' }}">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                        </svg>
+                        <span>Phân tích bệnh án</span>
                     </div>
+                                </a>
+
+                @auth
+                <!-- Tính năng Dropdown -->
+                <div class="relative group">
+                    <button class="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 flex items-center space-x-2">
+                        <x-heroicon-o-funnel class="w-4 h-4" />
+                        <span>Tính năng</span>
+                        <x-heroicon-o-chevron-down class="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />
+                    </button>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="absolute left-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <div class="py-2">
+                            <!-- Meal Plans Section -->
+                            <div class="px-3 py-1">
+                                <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kế hoạch bữa ăn</h3>
+                            </div>
+                            <a href="{{ route('meal-plans.index') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <x-heroicon-o-calendar class="w-4 h-4" />
+                                    <span>Danh sách kế hoạch</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('weekly-meal-plan') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <x-heroicon-o-plus class="w-4 h-4" />
+                                    <span>Tạo kế hoạch mới</span>
+                                </div>
+                            </a>
+                            
+                            <!-- Shopping Lists Section -->
+                            <div class="px-3 py-1 mt-2">
+                                <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Danh sách mua sắm</h3>
+                            </div>
+                            <a href="{{ route('shopping-lists.dashboard') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <x-heroicon-o-shopping-cart class="w-4 h-4" />
+                                    <span>Dashboard</span>
+                                </div>
+                            </a>
+                            <a href="{{ route('shopping-lists.index') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
+                                    <span>Quản lý chi tiết</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                @endauth
+            </div>
+        </div>
+
+        <!-- Right side -->
+        <div class="flex items-center space-x-4">
+            <!-- Dark mode toggle -->
+            <button onclick="toggleTheme()" 
+                    class="group p-2.5 text-gray-500 dark:text-gray-400 hover:text-orange-600 dark:hover:text-orange-400 rounded-xl transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:scale-110 active:scale-95"
+                    title="Chuyển đổi chế độ tối/sáng">
+                <x-lucide-moon class="w-5 h-5 dark:hidden group-hover:rotate-12 transition-transform duration-300" />
+                <x-lucide-sun class="w-5 h-5 hidden dark:block group-hover:rotate-12 transition-transform duration-300" />
+            </button>
+
+            @auth
+                <!-- User menu -->
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" type="button"
+                        class="flex text-sm rounded-xl focus:ring-4 focus:ring-orange-300 dark:focus:ring-orange-600 transition-all duration-300"
+                        id="user-menu-button" aria-expanded="false" data-dropdown-toggle="user-dropdown"
+                        data-dropdown-placement="bottom">
+                        <span class="sr-only">Open user menu</span>
+                        <div class="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center text-white font-semibold text-sm">
+                            {{ substr(auth()->user()->name, 0, 1) }}
+                        </div>
+                    </button>
 
                     <!-- Dropdown menu -->
-                    <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-100"
+                    <div x-show="open" @click.away="open = false"
+                        class="absolute right-0 mt-2 w-48 bg-white dark:bg-[#161615] rounded-xl shadow-lg border border-gray-200 dark:border-[#3E3E3A] z-50"
+                        x-transition:enter="transition ease-out duration-100"
                         x-transition:enter-start="transform opacity-0 scale-95"
                         x-transition:enter-end="transform opacity-100 scale-100"
                         x-transition:leave="transition ease-in duration-75"
                         x-transition:leave-start="transform opacity-100 scale-100"
-                        x-transition:leave-end="transform opacity-0 scale-95"
-                        class="absolute right-0 z-50 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-gray-700"
-                        role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                        x-transition:leave-end="transform opacity-0 scale-95">
+                        <div class="py-1">
+                            <a href="{{ route('profile') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg mx-2 my-1 transition-colors">
+                                <div class="flex items-center space-x-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    <span>Hồ sơ</span>
+                                </div>
+                            </a>
 
-                        <div class="px-4 py-3 text-sm text-gray-900 dark:text-white">
-                            <div class="font-medium">{{ auth()->user()->name }}</div>
-                            <div class="truncate text-gray-500 dark:text-gray-400">{{ auth()->user()->email }}</div>
-                        </div>
-
-                        <hr class="my-1 border-gray-200 dark:border-gray-600">
-
-                        <a href="{{ route('profile') }}"
-                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                            role="menuitem" tabindex="-1" id="user-menu-item-0">
-                            <div class="flex items-center space-x-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                <span>Hồ sơ</span>
-                            </div>
-                        </a>
-
-                        @if (auth()->user()->hasRole(['user']))
                             <a href="{{ route('filament.user.pages.user-dashboard') }}"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                                role="menuitem" tabindex="-1" id="user-menu-item-1">
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg mx-2 my-1 transition-colors">
                                 <div class="flex items-center space-x-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -214,67 +221,60 @@ new class extends Component {
                                     <span>Quản lý công thức</span>
                                 </div>
                             </a>
-                        @endif
 
-
-
-                        <a href="#"
-                            class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                            role="menuitem" tabindex="-1" id="user-menu-item-2">
-                            <div class="flex items-center space-x-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                <span>Cài đặt</span>
-                            </div>
-                        </a>
-
-                        @if (auth()->user()->hasRole(['admin', 'manager']))
-                            <hr class="my-1 border-gray-200 dark:border-gray-600">
-
+                            @if(auth()->user()->hasRole('admin'))
                             <a href="{{ route('filament.admin.pages.dashboard') }}"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                                role="menuitem" tabindex="-1" id="user-menu-item-admin">
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg mx-2 my-1 transition-colors">
                                 <div class="flex items-center space-x-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                    <span>Quản trị hệ thống</span>
+                                    <span>Quản lý hệ thống (Admin)</span>
                                 </div>
                             </a>
-                        @endif
+                            @endif
 
-                        <hr class="my-1 border-gray-200 dark:border-gray-600">
-
-                        <form method="POST" action="{{ route('logout') }}" class="w-full">
-                            @csrf
-                            <button type="submit"
-                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 dark:hover:text-white"
-                                role="menuitem" tabindex="-1" id="user-menu-item-3">
+                            @if(auth()->user()->hasRole('manager'))
+                            <a href="{{ route('filament.manager.pages.manager-dashboard') }}"
+                                class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg mx-2 my-1 transition-colors">
                                 <div class="flex items-center space-x-2">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                     </svg>
-                                    <span>Đăng xuất</span>
+                                    <span>Quản lý hệ thống (Manager)</span>
                                 </div>
-                            </button>
-                        </form>
+                            </a>
+                            @endif
+
+                            <form method="POST" action="{{ route('logout') }}" class="w-full">
+                                @csrf
+                                <button type="submit"
+                                    class="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg mx-2 my-1 transition-colors"
+                                    role="menuitem" tabindex="-1" id="user-menu-item-3">
+                                    <div class="flex items-center space-x-2">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                                        </svg>
+                                        <span>Đăng xuất</span>
+                                    </div>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             @else
                 <!-- Guest buttons -->
                 <div class="flex items-center space-x-3">
                     <a href="{{ route('login') }}"
-                        class="text-gray-900 hover:text-orange-600 dark:text-white dark:hover:text-orange-500 px-3 py-2 text-sm font-medium rounded-lg transition-colors duration-200">
+                        class="text-gray-900 dark:text-white hover:text-orange-600 dark:hover:text-orange-400 px-4 py-2 text-sm font-medium rounded-xl transition-all duration-300 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                         Đăng nhập
                     </a>
                     <a href="{{ route('register') }}"
-                        class="text-white bg-orange-600 hover:bg-orange-700 focus:ring-4 focus:ring-orange-300 font-medium rounded-lg text-sm px-4 py-2 transition-colors duration-200">
+                        class="text-white bg-orange-600 hover:bg-orange-700 focus:ring-4 focus:ring-orange-300 dark:focus:ring-orange-600 font-medium rounded-xl text-sm px-4 py-2 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105">
                         Đăng ký
                     </a>
                 </div>
@@ -282,7 +282,7 @@ new class extends Component {
 
             <!-- Mobile menu button -->
             <button data-collapse-toggle="navbar-user" type="button"
-                class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+                class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-xl md:hidden hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600"
                 aria-controls="navbar-user" aria-expanded="false">
                 <span class="sr-only">Open main menu</span>
                 <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -296,23 +296,7 @@ new class extends Component {
 
     <!-- Mobile menu -->
     <div class="items-center justify-between hidden w-full md:hidden md:w-auto md:order-1" id="navbar-user">
-        <div
-            class="flex flex-col p-4 md:p-0 mt-4 font-medium border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
-
-            <!-- Mobile Search -->
-            <div class="relative mb-4 md:hidden">
-                <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                    <svg class="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z" />
-                    </svg>
-                </div>
-                <input type="text" wire:model.live="searchQuery"
-                    class="block w-full p-2 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-orange-500 dark:focus:border-orange-500"
-                    placeholder="Tìm kiếm công thức...">
-            </div>
-
+        <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
             <a href="{{ route('home') }}"
                 class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('home') ? 'text-orange-600' : '' }}">
                 <div class="flex items-center space-x-2">
@@ -325,45 +309,70 @@ new class extends Component {
             </a>
 
             <a href="{{ route('recipes.index') }}"
-                class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('recipes.index') ? 'text-orange-600' : '' }}">
+                class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('recipes.*') ? 'text-orange-600' : '' }}">
                 <div class="flex items-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
                     <span>Công thức</span>
                 </div>
             </a>
 
-            <a href="{{ route('openai.index') }}"
-                class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('openai.*') ? 'text-orange-600' : '' }}">
+            <button onclick="openIngredientSubstituteModal()"
+                class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
                 <div class="flex items-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                     </svg>
-                    <span>AI Trợ lý</span>
+                    <span>Thay thế nguyên liệu</span>
                 </div>
-            </a>
+            </button>
 
-            <a href="{{ route('shops.index') }}"
-                class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('shops.*') ? 'text-orange-600' : '' }}">
+            <a href="{{ route('disease-analysis.index') }}"
+                class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('disease-analysis.*') ? 'text-orange-600' : '' }}">
                 <div class="flex items-center space-x-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18M5 7l1 12h12l1-12M8 7V5a4 4 0 118 0v2"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                     </svg>
-                    <span>Shop VIP</span>
+                    <span>Phân tích bệnh án</span>
                 </div>
             </a>
 
             @auth
-                <a href="{{ route('recipes.my') }}"
-                    class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('recipes.my') ? 'text-orange-600' : '' }}">
+                <!-- Kế hoạch bữa ăn -->
+                <a href="{{ route('meal-plans.index') }}"
+                    class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('meal-plans.*') ? 'text-orange-600' : '' }}">
                     <div class="flex items-center space-x-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        <span>Công thức của tôi</span>
+                        <x-heroicon-o-calendar class="w-4 h-4" />
+                        <span>Danh sách kế hoạch</span>
+                    </div>
+                </a>
+
+                <a href="{{ route('weekly-meal-plan') }}"
+                    class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('weekly-meal-plan') ? 'text-orange-600' : '' }}">
+                    <div class="flex items-center space-x-2">
+                        <x-heroicon-o-plus class="w-4 h-4" />
+                        <span>Tạo kế hoạch mới</span>
+                    </div>
+                </a>
+
+                <!-- Danh sách mua sắm -->
+                <a href="{{ route('shopping-lists.dashboard') }}"
+                    class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('shopping-lists.dashboard') ? 'text-orange-600' : '' }}">
+                    <div class="flex items-center space-x-2">
+                        <x-heroicon-o-shopping-cart class="w-4 h-4" />
+                        <span>Shopping Lists Dashboard</span>
+                    </div>
+                </a>
+
+                <a href="{{ route('shopping-lists.index') }}"
+                    class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('shopping-lists.index') ? 'text-orange-600' : '' }}">
+                    <div class="flex items-center space-x-2">
+                        <x-heroicon-o-clipboard-document-list class="w-4 h-4" />
+                        <span>Quản lý shopping list</span>
                     </div>
                 </a>
 
@@ -378,50 +387,45 @@ new class extends Component {
                     </div>
                 </a>
 
-                @if (auth()->user()->hasRole(['admin', 'manager']))
-                    <a href="{{ route('filament.admin.pages.dashboard') }}"
-                        class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('filament.admin.*') ? 'text-orange-600' : '' }}">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                            </svg>
-                            <span>Quản trị hệ thống</span>
-                        </div>
-                    </a>
+                @if(auth()->user()->hasRole('admin'))
+                <a href="{{ route('filament.admin.pages.dashboard') }}"
+                    class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>Quản lý hệ thống (Admin)</span>
+                    </div>
+                </a>
                 @endif
 
-                <div class="relative" x-data="{ open: false }">
-                    <button @click="open = !open"
-                        class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700 {{ request()->routeIs('favorites.*') ? 'text-orange-600' : '' }}">
-                        <div class="flex items-center space-x-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                            </svg>
-                            <span>Yêu thích</span>
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7">
-                                </path>
-                            </svg>
-                        </div>
-                    </button>
-
-                    <!-- Dropdown menu -->
-                    <div x-show="open" @click.away="open = false" x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
-                        class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
-                        <div class="py-2">
-                            <a href="{{ route('favorites.index') }}"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors">
-                                Công thức yêu thích
-                            </a>
-                        </div>
+                @if(auth()->user()->hasRole('manager'))
+                <a href="{{ route('filament.manager.pages.manager-dashboard') }}"
+                    class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                        </svg>
+                        <span>Quản lý hệ thống (Manager)</span>
                     </div>
-                </div>
+                </a>
+                @endif
+
+                <!-- VIP Package Link Mobile - Hidden -->
+                {{-- <a href="{{ route('subscriptions.packages') }}"
+                    class="block py-2 pl-3 pr-4 text-gray-900 rounded hover:bg-gray-100 md:hover:bg-transparent md:hover:text-orange-600 md:p-0 dark:text-white md:dark:hover:text-orange-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent dark:border-gray-700">
+                    <div class="flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Gói VIP</span>
+                    </div>
+                </a> --}}
             @endauth
-        </div>
+        </ul>
     </div>
 </nav>

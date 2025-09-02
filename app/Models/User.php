@@ -15,9 +15,10 @@ use App\Models\Rating;
 use App\Models\Favorite;
 use App\Models\Collection;
 use App\Models\Post;
-use App\Models\Payment;
-use App\Models\UserShop;
-use App\Models\VipPost;
+use App\Models\Restaurant;
+use App\Models\RestaurantRating;
+use App\Models\UserSubscription;
+use App\Models\RestaurantAd;
 use Illuminate\Support\Facades\Auth;
 
 class User extends Authenticatable
@@ -120,32 +121,20 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the comments for the user.
+     * Get the favorite restaurants for the user.
      */
-    public function comments()
+    public function favoriteRestaurants()
     {
-        return $this->hasMany(Comment::class);
+        return $this->belongsToMany(Restaurant::class, 'restaurant_favorites');
     }
 
     /**
-     * Payments made by the user.
+     * Get the restaurant ratings for the user.
      */
-    public function payments()
+    public function restaurantRatings()
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany(RestaurantRating::class);
     }
-
-    /**
-     * User shop (VIP shop) 1:1
-     */
-    public function shop()
-    {
-        return $this->hasOne(UserShop::class);
-    }
-
-    /**
-     * VIP posts created by the user.
-     */
 
     /**
      * Get the user's avatar URL, prioritizing Google avatar if available.
@@ -156,12 +145,12 @@ class User extends Authenticatable
         if ($this->google_id && $this->avatar && filter_var($this->avatar, FILTER_VALIDATE_URL)) {
             return $this->avatar;
         }
-        
+
         // Nếu có avatar local, sử dụng Storage URL
         if ($this->avatar && !filter_var($this->avatar, FILTER_VALIDATE_URL)) {
             return Storage::url($this->avatar);
         }
-        
+
         // Nếu không có avatar, trả về null
         return null;
     }
@@ -191,11 +180,65 @@ class User extends Authenticatable
     }
 
     /**
-     * Check if user has VIP account status.
+     * Get the user's subscriptions.
      */
-    public function getIsVipAccountAttribute()
+    public function subscriptions()
     {
-        return $this->profile?->isVipAccount ?? false;
+        return $this->hasMany(UserSubscription::class);
+    }
+
+    /**
+     * Get the user's active subscription.
+     */
+    public function activeSubscription()
+    {
+        return $this->subscriptions()
+            ->where('status', '=', 'active')
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now())
+            ->first();
+    }
+
+    /**
+     * Check if user is VIP.
+     */
+    public function isVip()
+    {
+        $subscription = $this->activeSubscription();
+        return $subscription && $subscription->subscription_type === 'vip';
+    }
+
+    /**
+     * Check if user is Premium.
+     */
+    public function isPremium()
+    {
+        $subscription = $this->activeSubscription();
+        return $subscription && $subscription->subscription_type === 'premium';
+    }
+
+    /**
+     * Get the user's restaurant ads.
+     */
+    public function restaurantAds()
+    {
+        return $this->hasMany(RestaurantAd::class);
+    }
+
+    public function paymentInvoices()
+    {
+        return $this->hasMany(PaymentInvoice::class);
+    }
+
+    /**
+     * Get the user's active restaurant ads.
+     */
+    public function activeRestaurantAds()
+    {
+        return $this->restaurantAds()
+            ->where('status', 'active')
+            ->where('start_date', '<=', now())
+            ->where('end_date', '>=', now());
     }
 
 }

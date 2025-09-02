@@ -66,13 +66,11 @@ class WeatherConditionRule extends Model
     public function scopeForTemperature($query, $temperature)
     {
         return $query->where(function ($q) use ($temperature) {
-            $q->where(function ($subQ) use ($temperature) {
-                $subQ->whereNull('temperature_min')
-                    ->orWhere('temperature_min', '<=', $temperature);
-            })->where(function ($subQ) use ($temperature) {
-                $subQ->whereNull('temperature_max')
-                    ->orWhere('temperature_max', '>=', $temperature);
-            });
+            $q->whereNull('temperature_min')
+                ->orWhere('temperature_min', '<=', $temperature);
+        })->where(function ($q) use ($temperature) {
+            $q->whereNull('temperature_max')
+                ->orWhere('temperature_max', '>=', $temperature);
         });
     }
 
@@ -82,13 +80,11 @@ class WeatherConditionRule extends Model
     public function scopeForHumidity($query, $humidity)
     {
         return $query->where(function ($q) use ($humidity) {
-            $q->where(function ($subQ) use ($humidity) {
-                $subQ->whereNull('humidity_min')
-                    ->orWhere('humidity_min', '<=', $humidity);
-            })->where(function ($subQ) use ($humidity) {
-                $subQ->whereNull('humidity_max')
-                    ->orWhere('humidity_max', '>=', $humidity);
-            });
+            $q->whereNull('humidity_min')
+                ->orWhere('humidity_min', '<=', $humidity);
+        })->where(function ($q) use ($humidity) {
+            $q->whereNull('humidity_max')
+                ->orWhere('humidity_max', '>=', $humidity);
         });
     }
 

@@ -50,64 +50,85 @@ class RecipeList extends Component
     public $showAdvancedFilters = false;
     public $viewMode = 'grid'; // grid, list
 
+    // Disable Livewire's automatic scroll behavior
+    protected $paginationTheme = 'tailwind';
+
+    // Override to prevent scroll to top on updates
+    public function hydrate()
+    {
+        // This method runs on every request to prevent scroll behavior
+    }
+
 
 
     public function mount()
     {
         // Initialize filters from URL parameters
-        if (is_string($this->selectedTags)) {
-            $this->selectedTags = explode(',', $this->selectedTags);
+        if (is_string($this->selectedTags) && $this->selectedTags !== '') {
+            $tagsString = (string) $this->selectedTags;
+            $this->selectedTags = array_filter(explode(',', $tagsString));
+        } else {
+            $this->selectedTags = [];
         }
     }
 
     public function updatedSearch()
     {
-        $this->resetPage();
+        // Reset page only for search, no scroll
+        $this->setPage(1);
+    }
+
+    public function performSearch()
+    {
+        $this->setPage(1);
+        $this->dispatch('scroll-to-results');
     }
 
     public function updatedCategory()
     {
-        $this->resetPage();
+        // Reset page silently for filters
+        $this->setPage(1);
     }
 
     public function updatedDifficulty()
     {
-        $this->resetPage();
+        $this->setPage(1);
     }
 
     public function updatedCookingTime()
     {
-        $this->resetPage();
+        $this->setPage(1);
     }
 
     public function updatedSort()
     {
-        $this->resetPage();
+        // For sort, we might want to keep the current page
+        // $this->setPage(1);
     }
 
     public function updatedSelectedTags()
     {
-        $this->resetPage();
+        $this->setPage(1);
     }
 
     public function updatedMinRating()
     {
-        $this->resetPage();
+        $this->setPage(1);
     }
 
     public function updatedMaxCalories()
     {
-        $this->resetPage();
+        $this->setPage(1);
     }
 
     public function updatedServings()
     {
-        $this->resetPage();
+        $this->setPage(1);
     }
 
     public function updatedPriceRange()
     {
-        $this->resetPage();
+        $this->setPage(1);
     }
 
     public function toggleAdvancedFilters()
@@ -127,7 +148,7 @@ class RecipeList extends Component
         } else {
             $this->selectedTags[] = $tagId;
         }
-        $this->resetPage();
+        $this->setPage(1);
     }
 
     public function clearFilters()
@@ -144,7 +165,9 @@ class RecipeList extends Component
             'servings',
             'priceRange'
         ]);
-        $this->resetPage();
+        $this->setPage(1);
+        // Smooth scroll to filters section after clearing
+        $this->dispatch('scroll-to-filters');
     }
 
     public function confirmToggleFavorite($recipeId)
@@ -177,36 +200,88 @@ class RecipeList extends Component
             $this->dispatch('favorite-added', recipeId: $recipeId);
             $this->dispatch('flash-message', message: 'Đã thêm vào danh sách yêu thích!', type: 'success');
         }
-        
+
         // Refresh component để cập nhật UI
         $this->dispatch('$refresh');
     }
 
+    /**
+     * Override to prevent automatic scroll on page changes
+     */
+    public function updatedPage()
+    {
+        // Do nothing - prevent automatic scroll
+        // Only scroll when explicitly called from pagination methods
+    }
+
+    /**
+     * Override updatingPage to prevent any automatic scroll behavior
+     */
+    public function updatingPage()
+    {
+        // Prevent Livewire's default scroll behavior
+    }
+
+    /**
+     * Custom pagination methods for better UX
+     */
+    public function nextPage()
+    {
+        $this->setPage($this->getPage() + 1);
+        $this->dispatch('scroll-to-top', ['fromPagination' => true]);
+    }
+
+    public function previousPage()
+    {
+        if ($this->getPage() > 1) {
+            $this->setPage($this->getPage() - 1);
+            $this->dispatch('scroll-to-top', ['fromPagination' => true]);
+        }
+    }
+
+    public function gotoPage($page)
+    {
+        $this->setPage($page);
+        $this->dispatch('scroll-to-top', ['fromPagination' => true]);
+    }
+
     public function render()
     {
-        $filters = [
-            'category' => $this->category,
-            'difficulty' => $this->difficulty,
-            'cooking_time' => $this->cookingTime,
-            'search' => $this->search,
-            'sort' => $this->sort,
-            'tags' => $this->selectedTags,
-            'min_rating' => $this->minRating,
-            'max_calories' => $this->maxCalories,
-            'servings' => $this->servings,
-            'price_range' => $this->priceRange,
-        ];
+        try {
+            $filters = [
+                'category' => $this->category,
+                'difficulty' => $this->difficulty,
+                'cooking_time' => $this->cookingTime,
+                'search' => $this->search,
+                'sort' => $this->sort,
+                'tags' => $this->selectedTags,
+                'min_rating' => $this->minRating,
+                'max_calories' => $this->maxCalories,
+                'servings' => $this->servings,
+                'price_range' => $this->priceRange,
+            ];
 
-        $recipeService = app(RecipeService::class);
-        $recipes = $recipeService->getFilteredRecipes($filters, $this->perPage);
+            $recipeService = app(RecipeService::class);
+            $recipes = $recipeService->getFilteredRecipes($filters, $this->perPage);
 
-        $categories = Category::where('parent_id', null)->with('children')->get();
-        $tags = Tag::orderBy('usage_count', 'desc')->limit(30)->get();
+            $categories = Category::all();
+            $tags = Tag::orderBy('usage_count', 'desc')->limit(30)->get();
 
-        return view('livewire.recipes.recipe-list', [
-            'recipes' => $recipes,
-            'categories' => $categories,
-            'tags' => $tags,
-        ]);
+            return view('livewire.recipes.recipe-list', [
+                'recipes' => $recipes,
+                'categories' => $categories,
+                'tags' => $tags,
+            ]);
+        } catch (\Exception $e) {
+            // Log error for debugging
+            \Illuminate\Support\Facades\Log::error('RecipeList render error: ' . $e->getMessage());
+
+            // Return empty results on error
+            return view('livewire.recipes.recipe-list', [
+                'recipes' => collect([])->paginate($this->perPage),
+                'categories' => collect([]),
+                'tags' => collect([]),
+            ]);
+        }
     }
 }
