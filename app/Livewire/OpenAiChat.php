@@ -21,7 +21,34 @@ class OpenAiChat extends Component
     public $ingredients = [];
     public $newIngredient = '';
     public $showHistory = false;
-    
+
+    // Quick action suggestions
+    public $quickSuggestions = [
+        'general' => [
+            'Gợi ý món ăn cho hôm nay',
+            'Cách nấu phở bò ngon',
+            'Mẹo bảo quản thực phẩm tươi',
+            'Món ăn vặt dễ làm'
+        ],
+        'ingredients' => [
+            'Món ngon từ thịt gà',
+            'Chế biến rau củ quả',
+            'Công thức từ trứng',
+            'Món chay healthy'
+        ],
+        'tips' => [
+            'Mẹo nấu cơm ngon',
+            'Cách ướp thịt đúng cách',
+            'Làm sao để giữ rau xanh',
+            'Bí quyết nấu nước dùng trong'
+        ],
+        'nutrition' => [
+            'Thông tin dinh dưỡng phở',
+            'Calories trong các món phổ biến',
+            'Thực phẩm giàu protein',
+            'Món ăn tốt cho sức khỏe'
+        ]
+    ];
 
     protected $openAiService;
     protected $markdownConverter;
@@ -38,7 +65,7 @@ class OpenAiChat extends Component
     public function mount()
     {
         $this->loadConversationFromSession();
-        
+
         // Ensure string properties are properly initialized
         $this->message = is_string($this->message) ? $this->message : '';
         $this->newIngredient = is_string($this->newIngredient) ? $this->newIngredient : '';
@@ -52,25 +79,25 @@ class OpenAiChat extends Component
             'message_type' => gettype($this->message),
             'is_empty' => empty(trim($this->message ?? ''))
         ]);
-        
+
         if (is_array($this->message)) {
-          
+
             $this->message = '';
             return;
         }
-        
+
         if (empty(trim($this->message ?? ''))) {
             return;
         }
 
-        // if (!$this->openAiService->isConfigured()) {
-        //     session()->flash('error', 'Dịch vụ AI chưa được cấu hình. Vui lòng liên hệ admin.');
-        //     return;
-        // }
+        if (!$this->openAiService->isConfigured()) {
+            session()->flash('error', 'Dịch vụ AI chưa được cấu hình. Vui lòng liên hệ admin.');
+            return;
+        }
 
         $this->isLoading = true;
         $userMessage = trim($this->message);
-        
+
         // Add user message to conversation
         $this->conversation[] = [
             'role' => 'user',
@@ -97,38 +124,24 @@ class OpenAiChat extends Component
 
         try {
             // Send to OpenAI
-            $result = $this->openAiService->getRecipeSuggestions($userMessage);
+            $result = $this->openAiService->sendMessage($userMessage, $conversationHistory);
 
             if ($result['success']) {
                 // Add AI response to conversation
                 Log::info('OpenRouter API result', [
                     'result' => $result
                 ]);
-                
-                $conversationEntry = [
+                $this->conversation[] = [
                     'role' => 'assistant',
                     'content' => $result['message'],
                     'content_html' => $this->parseMarkdown($result['message']),
                     'timestamp' => now()->format('H:i'),
                     'avatar' => '/images/ai-avatar.png'
                 ];
-                
-                // Add recipe data if available
-                if (isset($result['recipes']) && !empty($result['recipes'])) {
-                    $conversationEntry['recipes'] = $result['recipes'];
-                    Log::info('Recipe data added to conversation', [
-                        'recipe_count' => count($result['recipes']),
-                        'recipe_titles' => array_column($result['recipes'], 'title')
-                    ]);
-                } else {
-                    Log::info('No recipe data in AI response');
-                }
-                
-                $this->conversation[] = $conversationEntry;
 
                 // Store in session
                 $this->storeConversationInSession();
-                
+
                 // Scroll to bottom
                 $this->dispatch('scroll-to-bottom');
             } else {
@@ -165,17 +178,17 @@ class OpenAiChat extends Component
             $this->newIngredient = '';
             return;
         }
-        
+
         if (empty(trim($this->newIngredient))) {
             return;
         }
 
         $ingredient = trim($this->newIngredient);
-        
+
         if (!in_array($ingredient, $this->ingredients)) {
             $this->ingredients[] = $ingredient;
         }
-        
+
         $this->newIngredient = '';
     }
 
@@ -197,6 +210,11 @@ class OpenAiChat extends Component
         $this->sendMessage();
     }
 
+    public function selectQuickSuggestion($suggestion)
+    {
+        $this->message = $suggestion;
+        $this->sendMessage();
+    }
 
     public function clearConversation()
     {
@@ -210,51 +228,42 @@ class OpenAiChat extends Component
         $this->showHistory = !$this->showHistory;
     }
 
-
+    #[On('openai-quick-message')]
+    public function handleQuickMessage($message)
+    {
+        $this->message = $message;
+        $this->sendMessage();
+    }
 
     private function loadConversationFromSession()
     {
         $sessionConversation = Session::get('openai_conversation', []);
-        
+
         $this->conversation = collect($sessionConversation)->map(function ($msg) {
-            $conversationMsg = [
+            return [
                 'role' => $msg['role'],
                 'content' => $msg['content'],
                 'content_html' => $msg['role'] === 'assistant' ? $this->parseMarkdown($msg['content']) : null,
-                'timestamp' => isset($msg['timestamp']) ? 
-                    \Carbon\Carbon::parse($msg['timestamp'])->format('H:i') : 
+                'timestamp' => isset($msg['timestamp']) ?
+                    \Carbon\Carbon::parse($msg['timestamp'])->format('H:i') :
                     now()->format('H:i'),
-                'avatar' => $msg['role'] === 'user' ? 
-                    (Auth::user()?->avatar ?? '/images/default-avatar.png') : 
+                'avatar' => $msg['role'] === 'user' ?
+                    (Auth::user()?->avatar ?? '/images/default-avatar.png') :
                     '/images/ai-avatar.png',
                 'is_error' => $msg['is_error'] ?? false
             ];
-            
-            // Restore recipe data if available
-            if (isset($msg['recipes'])) {
-                $conversationMsg['recipes'] = $msg['recipes'];
-            }
-            
-            return $conversationMsg;
         })->toArray();
     }
 
     private function storeConversationInSession()
     {
         $sessionData = collect($this->conversation)->map(function ($msg) {
-            $sessionMsg = [
+            return [
                 'role' => $msg['role'],
                 'content' => $msg['content'],
                 'timestamp' => now()->toISOString(),
                 'is_error' => $msg['is_error'] ?? false
             ];
-            
-            // Include recipe data if available
-            if (isset($msg['recipes'])) {
-                $sessionMsg['recipes'] = $msg['recipes'];
-            }
-            
-            return $sessionMsg;
         })->slice(-20)->values()->toArray(); // Keep last 20 messages
 
         Session::put('openai_conversation', $sessionData);

@@ -246,9 +246,7 @@ class UserRecipeResource extends Resource
                 Tables\Columns\ImageColumn::make('featured_image')
                     ->label('Ảnh')
                     ->circular()
-                    ->size(50)
-                    ->disk('public')
-                    ->visibility('public'),
+                    ->size(50),
                 Tables\Columns\TextColumn::make('title')
                     ->label('Tiêu đề')
                     ->searchable()
@@ -356,7 +354,8 @@ class UserRecipeResource extends Resource
                         return $count . ' công thức đã được gửi để phê duyệt.';
                     })
                     ->deselectRecordsAfterCompletion(),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getEloquentQuery(): Builder

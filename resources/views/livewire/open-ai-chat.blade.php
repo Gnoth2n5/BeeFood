@@ -45,7 +45,39 @@
         @endif
     </div>
 
-    
+    <!-- Category Tabs -->
+    <div class="bg-white border-l border-r border-gray-200 px-6 py-3">
+        <div class="flex space-x-1 overflow-x-auto">
+            <button wire:click="$set('selectedCategory', 'general')" 
+                    class="px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap {{ $selectedCategory === 'general' ? 'bg-orange-100 text-orange-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                Chung
+            </button>
+            <button wire:click="$set('selectedCategory', 'ingredients')" 
+                    class="px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap {{ $selectedCategory === 'ingredients' ? 'bg-orange-100 text-orange-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                </svg>
+                Nguyên liệu
+            </button>
+            <button wire:click="$set('selectedCategory', 'tips')" 
+                    class="px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap {{ $selectedCategory === 'tips' ? 'bg-orange-100 text-orange-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                </svg>
+                Mẹo hay
+            </button>
+            <button wire:click="$set('selectedCategory', 'nutrition')" 
+                    class="px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap {{ $selectedCategory === 'nutrition' ? 'bg-orange-100 text-orange-700' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
+                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+                Dinh dưỡng
+            </button>
+        </div>
+    </div>
 
     <!-- Ingredients Section (shown when ingredients category is selected) -->
     @if($selectedCategory === 'ingredients')
@@ -92,7 +124,18 @@
         </div>
     @endif
 
-   
+    <!-- Quick Suggestions -->
+    <div class="bg-white border-l border-r border-gray-200 px-6 py-4">
+        <h4 class="text-sm font-medium text-gray-900 mb-3">Gợi ý nhanh:</h4>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            @foreach($quickSuggestions[$selectedCategory] as $suggestion)
+                <button wire:click="selectQuickSuggestion('{{ $suggestion }}')" 
+                        class="text-left px-3 py-2 text-sm text-gray-700 bg-gray-50 rounded-lg hover:bg-orange-50 hover:text-orange-700 transition-colors">
+                    {{ $suggestion }}
+                </button>
+            @endforeach
+        </div>
+    </div>
 
     <!-- Chat Messages -->
     <div class="bg-white border-l border-r border-gray-200">
@@ -106,12 +149,12 @@
                         </svg>
                     </div>
                     <h3 class="text-lg font-medium text-gray-900 mb-2">Xin chào! Tôi là trợ lý AI nấu ăn</h3>
-                    <p class="text-gray-600">Hãy hỏi tôi nếu bạn cần đề xuất món ăn dựa theo nhu cầu của bạn!</p>
+                    <p class="text-gray-600">Hãy hỏi tôi bất cứ điều gì về nấu ăn, công thức món ăn, hoặc mẹo hay trong bếp!</p>
                 </div>
             @else
                 @foreach($conversation as $message)
                     <div class="flex {{ $message['role'] === 'user' ? 'justify-end' : 'justify-start' }}">
-                        <div class="flex max-w-xs lg:max-w-lg {{ $message['role'] === 'user' ? 'flex-row-reverse' : 'flex-row' }}">
+                        <div class="flex max-w-xs lg:max-w-md {{ $message['role'] === 'user' ? 'flex-row-reverse' : 'flex-row' }}">
                             <div class="flex-shrink-0">
                                 <div class="w-8 h-8 rounded-full {{ $message['role'] === 'user' ? 'bg-gray-300 ml-3' : 'bg-orange-500 mr-3' }} flex items-center justify-center">
                                     @if($message['role'] === 'user')
@@ -133,71 +176,6 @@
                                         </div>
                                     @else
                                         <p class="text-sm whitespace-pre-wrap">{{ $message['content'] }}</p>
-                                    @endif
-                                    
-                                    <!-- Recipe Suggestions -->
-                                    @if($message['role'] === 'assistant' && isset($message['recipes']) && !empty($message['recipes']))
-                                        <div class="mt-4 pt-4 border-t border-gray-200">
-                                            <h4 class="text-sm font-semibold text-gray-900 mb-3">Công thức được nhắc đến:</h4>
-                                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                @foreach($message['recipes'] as $recipe)
-                                                    <div class="recipe-card bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm hover:shadow-md transition-all duration-200">
-                                                        <div class="relative h-32 bg-gray-100">
-                                                            @if($recipe['featured_image'] && file_exists(storage_path('app/public/' . $recipe['featured_image'])))
-                                                                <img src="{{ asset('storage/' . $recipe['featured_image']) }}" 
-                                                                     alt="{{ $recipe['title'] }}"
-                                                                     class="w-full h-full object-cover">
-                                                            @else
-                                                                <div class="w-full h-full bg-gradient-to-br from-orange-100 to-orange-200 flex items-center justify-center">
-                                                                    <svg class="w-12 h-12 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 5.477 9.246 5 7.5 5s-3.332.477-4.5 1.253m9 0C18.168 5.477 19.754 5 21.5 5c1.747 0 3.332.477 4.5 1.253v13C18.168 18.523 19.754 19 21.5 19c1.747 0 3.332-.477 4.5-1.253"/>
-                                                                    </svg>
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                        <div class="p-3">
-                                                            <h5 class="font-medium text-gray-900 text-sm mb-2 line-clamp-2">
-                                                                {{ $recipe['title'] }}
-                                                            </h5>
-                                                            @if($recipe['summary'])
-                                                                <p class="text-xs text-gray-600 mb-2 line-clamp-2">
-                                                                    {{ Str::limit($recipe['summary'], 80) }}
-                                                                </p>
-                                                            @endif
-                                                            <div class="flex items-center justify-between text-xs text-gray-500 mb-3">
-                                                                @if($recipe['cooking_time'])
-                                                                    <span class="flex items-center">
-                                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                                                        </svg>
-                                                                        {{ $recipe['cooking_time'] }} phút
-                                                                    </span>
-                                                                @endif
-                                                                @if($recipe['difficulty_level'])
-                                                                    <span class="flex items-center">
-                                                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                                                                        </svg>
-                                                                        {{ $recipe['difficulty_level'] }}
-                                                                    </span>
-                                                                @endif
-                                                            </div>
-                                                            <a href="{{ route('recipes.show', $recipe['slug']) }}" 
-                                                               class="block w-full text-center px-3 py-2 bg-orange-600 text-white text-xs font-medium rounded-md hover:bg-orange-700 transition-colors">
-                                                                Xem công thức
-                                                            </a>
-                                                        </div>
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @elseif($message['role'] === 'assistant' && !isset($message['recipes']))
-                                        <!-- No recipes suggested message -->
-                                        <div class="mt-4 pt-4 border-t border-gray-200">
-                                            <div class="text-center py-4">
-                                                <p class="text-sm text-gray-500 italic">AI đã đưa ra lời khuyên chung, không có công thức cụ thể nào được gợi ý.</p>
-                                            </div>
-                                        </div>
                                     @endif
                                 </div>
                                 <p class="text-xs text-gray-500 mt-1 {{ $message['role'] === 'user' ? 'text-right' : 'text-left' }}">
@@ -307,22 +285,6 @@
     margin-bottom: 0.75rem;
     font-style: italic;
     color: #6b7280;
-}
-
-/* Recipe card styling */
-.line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.recipe-card {
-    transition: all 0.2s ease-in-out;
-}
-
-.recipe-card:hover {
-    transform: translateY(-2px);
 }
 </style>
 

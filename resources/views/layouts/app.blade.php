@@ -14,24 +14,27 @@
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
-        <!-- Preload critical resources -->
-        <link rel="preload" href="{{ asset('build/assets/app-fxacCLXp.css') }}" as="style">
-        <link rel="preload" href="{{ asset('build/assets/app-DqbBmj3H.js') }}" as="script">
-
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         
-        <!-- Image optimization -->
-        <style>
-            img {
-                loading: lazy;
-                max-width: 100%;
-                height: auto;
-            }
-        </style>
+        <!-- Theme initialization script to prevent FOUC (Flash of Unstyled Content) -->
+        <script>
+            // Immediately apply theme before page renders
+            (function() {
+                const savedTheme = localStorage.getItem('theme');
+                const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                const theme = savedTheme || (systemPrefersDark ? 'dark' : 'light');
+                
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            })();
+        </script>
     </head>
     <body class="font-sans antialiased">
-        <div class="min-h-screen bg-gray-100">
+        <div class="min-h-screen bg-gray-100 dark:bg-slate-900 transition-colors duration-300">
             <livewire:layout.navigation />
 
             <!-- Flash Messages -->
@@ -40,7 +43,7 @@
             <!-- Page Heading -->
             @if (isset($header))
                 <header class="bg-white shadow">
-                    <div class="max-w-10xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
                         {{ $header }}
                     </div>
                 </header>
@@ -55,11 +58,11 @@
                 @endif
             </main>
             <x-footer />
-            
+
             <!-- OpenAI Quick Chat Button (show on all pages except AI chat) -->
-            @unless(request()->routeIs('openai.*'))
+            {{ @unless(request()->routeIs('openai.*'))
                 <x-openai-quick-chat />
-            @endunless
+            @endunless --}}
         </div>
 
         <script>
@@ -67,8 +70,8 @@
 
             // Handle flash message
             Livewire.on('flash-message', (event) => {
-                const message = event.message;
-                const type = event.type || 'success';
+                const message = event.message || event[0]?.message;
+                const type = event.type || event[0]?.type || 'success';
                 
                 // Tạo flash message element
                 const flashElement = document.createElement('div');
@@ -99,8 +102,8 @@
 
             // Handle show message (for post actions)
             Livewire.on('show-message', (data) => {
-                const message = data.message;
-                const type = data.type || 'success';
+                const message = data.message || data[0]?.message;
+                const type = data.type || data[0]?.type || 'success';
                 
                 // Tạo flash message element
                 const flashElement = document.createElement('div');
@@ -141,5 +144,47 @@
 
         });
         </script>
+
+		@stack('scripts')
+
+        <!-- Ingredient Substitute Modal -->
+        <x-ingredient-substitute-modal />
+        
+        <!-- Ingredient Substitute JavaScript -->
+        <script src="{{ asset('js/ingredient-substitute.js') }}"></script>
+
+        <!-- Scroll to Top Button -->
+        <button id="scrollToTop" class="fixed bottom-6 left-6 bg-white/80 hover:bg-white text-black rounded-full p-3 shadow-lg transition-all duration-300 opacity-0 invisible z-40 backdrop-blur-sm">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+            </svg>
+        </button>
+
+        <!-- Scroll to Top JavaScript -->
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const scrollToTopBtn = document.getElementById('scrollToTop');
+                
+                // Hiển thị nút khi scroll xuống 300px
+                window.addEventListener('scroll', function() {
+                    if (window.pageYOffset > 300) {
+                        scrollToTopBtn.classList.remove('opacity-0', 'invisible');
+                        scrollToTopBtn.classList.add('opacity-100', 'visible');
+                    } else {
+                        scrollToTopBtn.classList.add('opacity-0', 'invisible');
+                        scrollToTopBtn.classList.remove('opacity-100', 'visible');
+                    }
+                });
+                
+                // Scroll to top khi click
+                scrollToTopBtn.addEventListener('click', function() {
+                    window.scrollTo({
+                        top: 0,
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        </script>
     </body>
+
 </html>

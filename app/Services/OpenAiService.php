@@ -2,10 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Recipe;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Exception;
+
+use Illuminate\Support\Facades\Cache;
+
 
 class OpenAiService
 {
@@ -17,7 +18,7 @@ class OpenAiService
 
     public function __construct()
     {
-        $this->apiKey = env('OPENAI_API_KEY');
+        $this->apiKey = env('OPEN_AI_API_KEY');
     }
 
     /**
@@ -25,7 +26,7 @@ class OpenAiService
      */
     protected function isCircuitBreakerOpen(): bool
     {
-        $failureData = cache()->get(self::$circuitBreakerKey);
+        $failureData = Cache::get(self::$circuitBreakerKey);
 
         if (!$failureData) {
             return false;
@@ -52,11 +53,11 @@ class OpenAiService
      */
     protected function recordFailure(): void
     {
-        $failureData = cache()->get(self::$circuitBreakerKey, ['count' => 0, 'last_failure' => time()]);
+        $failureData = Cache::get(self::$circuitBreakerKey, ['count' => 0, 'last_failure' => time()]);
         $failureData['count']++;
         $failureData['last_failure'] = time();
 
-        cache()->put(self::$circuitBreakerKey, $failureData, self::$recoveryTimeout * 2);
+        Cache::put(self::$circuitBreakerKey, $failureData, self::$recoveryTimeout * 2);
     }
 
     /**
@@ -64,224 +65,82 @@ class OpenAiService
      */
     protected function recordSuccess(): void
     {
-        cache()->forget(self::$circuitBreakerKey);
+        Cache::forget(self::$circuitBreakerKey);
     }
 
     /**
-     * Get recipe suggestions based on ingredients using site's recipe database
+     * Test OpenAI API connection
      */
-    public function getRecipeSuggestions($prompt)
+    public function testConnection()
     {
         try {
-            Log::info('OpenRouter recipe suggestions', [
-                'prompt' => $prompt
-            ]);
-
-            return $this->recommendFromSite($prompt);
-        } catch (Exception $e) {
-            Log::error('OpenRouter recipe suggestions error', [
-                'message' => $e->getMessage(),
-                'prompt' => $prompt
-            ]);
-
-            return [
-                'success' => false,
-                'error' => 'Không thể tạo gợi ý công thức. Vui lòng thử lại.'
-            ];
-        }
-    }
-
-    /**
-     * Recommend recipes from site's current database using semantic similarity.
-     * Flow: 1) Embed query 2) Vector similarity against Recipe.embeddings 3) Ask LLM to personalize.
-     */
-    public function recommendFromSite(string $prompt): array
-    {
-        try {
-            // Step 1: Embed the query
-            /** @var EmbeddingService $embeddingService */
-            $embeddingService = app(EmbeddingService::class);
-            $queryVector = $embeddingService->embed($prompt);
-            if (!is_array($queryVector) || empty($queryVector)) {
+            if (!$this->apiKey) {
                 return [
                     'success' => false,
-                    'error' => 'Không thể tạo embedding cho truy vấn.'
+                    'error' => 'OpenAI API key chưa được cấu hình.'
                 ];
             }
 
-            // Step 2: Search DB by vector similarity (cosine)
-            $candidates = Recipe::query()
-                ->where('status', 'approved')
-                ->whereNotNull('embedding')
-                ->select(['id', 'title', 'summary', 'slug', 'embedding', 'featured_image', 'cooking_time', 'difficulty'])
-                ->get();
+            $payload = [
+                'model' => 'gpt-3.5-turbo',
+                'messages' => [
+                    [
+                        'role' => 'user',
+                        'content' => 'Xin chào! Hãy trả lời "API hoạt động tốt!"'
+                    ]
+                ],
+                'max_tokens' => 50,
+                'temperature' => 0.7,
+            ];
 
-            $scored = [];
-            foreach ($candidates as $recipe) {
-                $vec = is_array($recipe->embedding) ? $recipe->embedding : [];
-                if (empty($vec)) {
-                    continue;
-                }
-                $score = $this->cosineSimilarity($queryVector, $vec);
-                if ($score > 0) {
-                    $scored[] = [
-                        'id' => $recipe->id,
-                        'title' => $recipe->title,
-                        'summary' => $recipe->summary,
-                        'slug' => $recipe->slug,
-                        'featured_image' => $recipe->featured_image,
-                        'cooking_time' => $recipe->cooking_time,
-                        'difficulty_level' => $recipe->difficulty_level,
-                        'similarity' => round($score, 6),
-                    ];
-                }
-            }
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . $this->apiKey,
+                'Content-Type' => 'application/json',
+            ])->withOptions([
+                        'verify' => env('APP_ENV') === 'production' ? true : false,
+                        'timeout' => 10,
+                    ])->post($this->baseUrl . '/chat/completions', $payload);
 
-            if (empty($scored)) {
+            if ($response->successful()) {
+                $data = $response->json();
+                $messageContent = $data['choices'][0]['message']['content'] ?? '';
+
                 return [
-                    'success' => false,
-                    'error' => 'Không tìm thấy công thức phù hợp.'
+                    'success' => true,
+                    'message' => 'API hoạt động tốt!',
+                    'response' => $messageContent
                 ];
             }
 
-            usort($scored, function ($a, $b) {
-                return $b['similarity'] <=> $a['similarity'];
-            });
-            $top = array_slice($scored, 0, max(3, 5));
-
-            // Step 3: Send to LLM for personalized recommendation
-            $systemMessage = [
-                'role' => 'system',
-                'content' => 'Bạn là trợ lý ẩm thực của website. Chỉ đề xuất các công thức trong danh sách CONTEXT bên dưới. Trả lời bằng tiếng Việt, ngắn gọn, thân thiện. Khi đề xuất công thức, hãy nhắc tên cụ thể của từng món ăn để người dùng dễ hiểu.'
-            ];
-
-            $contextJson = json_encode($top, JSON_UNESCAPED_UNICODE);
-            $userMessage = [
-                'role' => 'user',
-                'content' => "Yêu cầu: {$prompt}\n\nCONTEXT (các công thức khả dụng): {$contextJson}\n\nChọn ra từ 1 đến 5 công thức phù hợp nhất trong CONTEXT, giải thích ngắn lý do phù hợp. Hãy nhắc tên cụ thể của từng món ăn được đề xuất."
-            ];
-
-            $response = $this->sendMessageWithMessages([$systemMessage, $userMessage]);
-            if (($response['success'] ?? false) === true) {
-                // Parse the AI response to extract only the suggested recipes
-                $suggestedRecipes = $this->extractSuggestedRecipes($response['message'], $top);
-
-                // Attach only the suggested recipes, not all candidates
-                if (!empty($suggestedRecipes)) {
-                    $response['recipes'] = $suggestedRecipes;
-                }
-            }
-            return $response;
-        } catch (Exception $e) {
-            Log::error('Recommendation flow failed', [
-                'message' => $e->getMessage(),
-                'query' => $prompt,
-            ]);
             return [
                 'success' => false,
-                'error' => 'Không thể tạo gợi ý dựa trên dữ liệu trang. Vui lòng thử lại.'
+                'error' => 'API test failed: ' . $response->status() . ' - ' . $response->body()
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => 'API test error: ' . $e->getMessage()
             ];
         }
     }
 
     /**
-     * Extract suggested recipes from AI response by matching recipe titles
+     * Send a chat message to OpenAI and get response
      */
-    private function extractSuggestedRecipes(string $aiResponse, array $candidates): array
-    {
-        $suggestedRecipes = [];
-
-        // Convert AI response to lowercase for better matching
-        $responseLower = strtolower($aiResponse);
-
-        Log::info('Extracting suggested recipes', [
-            'ai_response_length' => strlen($aiResponse),
-            'candidates_count' => count($candidates),
-            'response_preview' => substr($aiResponse, 0, 200) . '...'
-        ]);
-
-        // First, try exact title matching
-        foreach ($candidates as $recipe) {
-            $titleLower = strtolower($recipe['title']);
-
-            // Check if the recipe title appears in the AI response
-            if (str_contains($responseLower, $titleLower)) {
-                $suggestedRecipes[] = $recipe;
-                Log::info('Exact match found', ['recipe_title' => $recipe['title']]);
-            }
-        }
-
-        // If no exact matches found, try partial matching
-        if (empty($suggestedRecipes)) {
-            Log::info('No exact matches found, trying partial matching');
-            foreach ($candidates as $recipe) {
-                $titleWords = explode(' ', strtolower($recipe['title']));
-                $matchCount = 0;
-
-                foreach ($titleWords as $word) {
-                    if (strlen($word) > 2 && str_contains($responseLower, $word)) {
-                        $matchCount++;
-                    }
-                }
-
-                // If more than 50% of words match, consider it suggested
-                if ($matchCount > 0 && ($matchCount / count($titleWords)) > 0.5) {
-                    $suggestedRecipes[] = $recipe;
-                    Log::info('Partial match found', [
-                        'recipe_title' => $recipe['title'],
-                        'match_count' => $matchCount,
-                        'total_words' => count($titleWords),
-                        'match_ratio' => $matchCount / count($titleWords)
-                    ]);
-                }
-            }
-        }
-
-        // If still no matches, check if the AI response contains recipe-related keywords
-        if (empty($suggestedRecipes)) {
-            Log::info('No title matches found, checking for recipe-related keywords');
-            $recipeKeywords = ['công thức', 'món ăn', 'nấu', 'chế biến', 'gợi ý', 'đề xuất'];
-            $hasRecipeKeywords = false;
-
-            foreach ($recipeKeywords as $keyword) {
-                if (str_contains($responseLower, $keyword)) {
-                    $hasRecipeKeywords = true;
-                    break;
-                }
-            }
-
-            // If AI mentions recipes but no specific titles, take top 3 candidates
-            if ($hasRecipeKeywords) {
-                $suggestedRecipes = array_slice($candidates, 0, 3);
-                Log::info('Taking top candidates based on recipe keywords', [
-                    'suggested_titles' => array_column($suggestedRecipes, 'title')
-                ]);
-            }
-        }
-
-        Log::info('Recipe extraction complete', [
-            'suggested_count' => count($suggestedRecipes),
-            'suggested_titles' => array_column($suggestedRecipes, 'title')
-        ]);
-
-        // Limit to maximum 5 recipes
-        return array_slice($suggestedRecipes, 0, 5);
-    }
-
-    /**
-     * Send chat with full messages array, reusing circuit breaker and retry logic.
-     */
-    private function sendMessageWithMessages(array $messages)
+    public function sendMessage(string $message, array $conversationHistory = [])
     {
         try {
+            // Check circuit breaker first
             if ($this->isCircuitBreakerOpen()) {
-                Log::warning('OpenRouter service circuit breaker is open');
+                Log::warning('OpenAI service circuit breaker is open');
                 return [
                     'success' => false,
                     'error' => 'Dịch vụ AI hiện tại không khả dụng do quá nhiều lỗi. Vui lòng thử lại sau 5 phút.'
                 ];
             }
 
+            // Memory optimization: Set memory limit for this operation
             if (function_exists('ini_set')) {
                 ini_set('memory_limit', '256M');
             }
@@ -289,26 +148,52 @@ class OpenAiService
             if (!$this->apiKey) {
                 return [
                     'success' => false,
-                    'error' => 'OpenRouter API key chưa được cấu hình. Vui lòng kiểm tra cài đặt.'
+                    'error' => 'OpenAI API key chưa được cấu hình. Vui lòng kiểm tra cài đặt.'
                 ];
             }
+
+            // Prepare system message for recipe assistance
+            $systemMessage = [
+                'role' => 'system',
+                'content' => 'Bạn là trợ lý AI chuyên về nấu ăn và công thức món ăn. Hãy trả lời bằng tiếng Việt một cách thân thiện và hữu ích. Khi được hỏi về công thức, hãy đưa ra hướng dẫn chi tiết bao gồm nguyên liệu, cách làm, thời gian nấu và mẹo hay. Luôn đảm bảo thông tin chính xác và an toàn thực phẩm. Hãy trả lời một cách ngắn gọn và dễ hiểu. QUAN TRỌNG: Trả lời trực tiếp và ngắn gọn, KHÔNG sử dụng cấu trúc reasoning, KHÔNG giải thích quá trình suy nghĩ, KHÔNG sử dụng các trường reasoning. Chỉ đưa ra câu trả lời trực tiếp trong trường content.'
+            ];
+
+            // Build messages array
+            $messages = [$systemMessage];
+
+            // Add conversation history (limit to last 5 messages to save memory - reduced from 8)
+            $limitedHistory = array_slice($conversationHistory, -5);
+            foreach ($limitedHistory as $msg) {
+                $messages[] = [
+                    'role' => $msg['role'],
+                    'content' => mb_substr($msg['content'], 0, 1000) // Limit message length to 1000 chars
+                ];
+            }
+
+            // Add current message (with length limit)
+            $messages[] = [
+                'role' => 'user',
+                'content' => mb_substr($message, 0, 2000) // Limit to 2000 chars
+            ];
+
 
             $payload = [
                 'model' => 'deepseek/deepseek-chat-v3-0324:free',
                 'messages' => $messages,
-                'max_tokens' => 300,
-                'temperature' => 0.5,
-                'top_p' => 0.5,
+                'max_tokens' => 1000,
+                'temperature' => 0.7,
+                'top_p' => 0.9,
                 'stream' => false,
             ];
 
+            // Implement retry logic with exponential backoff
             $maxRetries = 3;
-            $baseDelay = 1;
+            $baseDelay = 1; // seconds
 
             for ($attempt = 1; $attempt <= $maxRetries; $attempt++) {
                 try {
-                    $timeout = min(15 + ($attempt * 5), 30);
-                    Log::info('OpenRouter API request (custom messages)', [
+                    $timeout = min(15 + ($attempt * 5), 30); // Progressive timeout: 20s, 25s, 30s
+                    Log::info('OpenAI API request', [
                         'attempt' => $attempt,
                         'payload' => $payload,
                         'timeout' => $timeout
@@ -317,21 +202,22 @@ class OpenAiService
                     $response = Http::withHeaders([
                         'Authorization' => 'Bearer ' . $this->apiKey,
                         'Content-Type' => 'application/json',
-                        'HTTP-Referer' => request()->getSchemeAndHttpHost() ?? 'http://localhost',
-                        'X-Title' => 'Bee Recipe Assistant',
                     ])->withOptions([
-                        'verify' => env('APP_ENV') === 'production' ? true : false,
-                        'timeout' => $timeout,
-                        'connect_timeout' => 10,
-                    ])->timeout($timeout)->post($this->baseUrl . '/chat/completions', $payload);
+                                'verify' => env('APP_ENV') === 'production' ? true : false,
+                                'timeout' => $timeout,
+                                'connect_timeout' => 10, // Separate connection timeout
+                            ])->timeout($timeout)->post($this->baseUrl . '/chat/completions', $payload);
 
+
+                    // If successful, break out of retry loop
                     if ($response->successful()) {
                         break;
                     }
 
+                    // If not the last attempt and it's a timeout/server error, retry
                     if ($attempt < $maxRetries && ($response->status() >= 500 || $response->status() === 408)) {
-                        $delay = $baseDelay * pow(2, $attempt - 1);
-                        Log::warning("OpenRouter API attempt {$attempt} failed, retrying in {$delay}s", [
+                        $delay = $baseDelay * pow(2, $attempt - 1); // Exponential backoff
+                        Log::warning("OpenAI API attempt {$attempt} failed, retrying in {$delay}s", [
                             'status' => $response->status(),
                             'attempt' => $attempt
                         ]);
@@ -339,31 +225,38 @@ class OpenAiService
                         continue;
                     }
                 } catch (\Illuminate\Http\Client\ConnectionException $e) {
-                    Log::warning("OpenRouter connection error on attempt {$attempt}", [
+                    Log::warning("OpenAI connection error on attempt {$attempt}", [
                         'message' => $e->getMessage(),
                         'attempt' => $attempt
                     ]);
 
+                    // If not the last attempt, retry with exponential backoff
                     if ($attempt < $maxRetries) {
                         $delay = $baseDelay * pow(2, $attempt - 1);
                         sleep($delay);
                         continue;
                     }
 
+                    // Re-throw if it's the last attempt
                     throw $e;
                 }
             }
 
             if ($response->successful()) {
                 $data = $response->json();
-                Log::info('OpenRouter API data (custom messages)', [
+                Log::info('OpenAI API data', [
                     'data' => $data
                 ]);
 
+                // Extract message content - try content first, then reasoning field
                 $messageContent = $data['choices'][0]['message']['content'] ?? '';
+
+                // If content is empty, try to get from reasoning field (for models like deepseek-r1)
                 if (empty($messageContent) && isset($data['choices'][0]['message']['reasoning'])) {
                     $messageContent = $data['choices'][0]['message']['reasoning'];
                 }
+
+                // Fallback message if both fields are empty
                 if (empty($messageContent)) {
                     $messageContent = 'Xin lỗi, tôi không thể trả lời câu hỏi này.';
                 }
@@ -378,7 +271,7 @@ class OpenAiService
             $errorData = $response->json();
             $errorMessage = $this->getErrorMessage($errorData);
 
-            Log::error('OpenRouter API error (custom messages)', [
+            Log::error('OpenRouter API error', [
                 'status' => $response->status(),
                 'response' => $errorData
             ]);
@@ -388,11 +281,12 @@ class OpenAiService
                 'error' => $errorMessage
             ];
         } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            Log::error('OpenRouter connection error (custom messages)', [
+            Log::error('OpenRouter connection error', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
 
+            // Check if it's a timeout error
             if (str_contains($e->getMessage(), 'timeout') || str_contains($e->getMessage(), 'timed out')) {
                 return [
                     'success' => false,
@@ -405,7 +299,7 @@ class OpenAiService
                 'error' => 'Không thể kết nối với dịch vụ AI. Vui lòng kiểm tra kết nối mạng và thử lại.'
             ];
         } catch (Exception $e) {
-            Log::error('OpenRouter service error (custom messages)', [
+            Log::error('OpenRouter service error', [
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
@@ -413,6 +307,96 @@ class OpenAiService
             return [
                 'success' => false,
                 'error' => 'Có lỗi xảy ra khi kết nối với AI. Vui lòng thử lại sau.'
+            ];
+        }
+    }
+
+    /**
+     * Get recipe suggestions based on ingredients
+     */
+    public function getRecipeSuggestions(array $ingredients)
+    {
+        try {
+            $ingredientsList = implode(', ', $ingredients);
+            $message = "Tôi có những nguyên liệu sau: {$ingredientsList}. Hãy gợi ý cho tôi 3 món ăn có thể làm từ những nguyên liệu này và cách làm chi tiết.";
+
+            return $this->sendMessage($message);
+        } catch (Exception $e) {
+            Log::error('OpenRouter recipe suggestions error', [
+                'message' => $e->getMessage(),
+                'ingredients' => $ingredients
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Không thể tạo gợi ý công thức. Vui lòng thử lại.'
+            ];
+        }
+    }
+
+    /**
+     * Get cooking tips and tricks
+     */
+    public function getCookingTips(string $dishType = '')
+    {
+        try {
+            $message = $dishType
+                ? "Hãy cho tôi một số mẹo nấu ăn hay cho món {$dishType}."
+                : "Hãy cho tôi một số mẹo nấu ăn hay để cải thiện kỹ năng nấu nướng.";
+
+            return $this->sendMessage($message);
+        } catch (Exception $e) {
+            Log::error('OpenRouter cooking tips error', [
+                'message' => $e->getMessage(),
+                'dish_type' => $dishType
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Không thể lấy mẹo nấu ăn. Vui lòng thử lại.'
+            ];
+        }
+    }
+
+    /**
+     * Analyze recipe and provide feedback
+     */
+    public function analyzeRecipe(string $recipeContent)
+    {
+        try {
+            $message = "Hãy phân tích công thức này và đưa ra nhận xét về nguyên liệu, cách làm, và gợi ý cải tiến nếu có:\n\n{$recipeContent}";
+
+            return $this->sendMessage($message);
+        } catch (Exception $e) {
+            Log::error('OpenRouter recipe analysis error', [
+                'message' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Không thể phân tích công thức. Vui lòng thử lại.'
+            ];
+        }
+    }
+
+    /**
+     * Get nutritional information
+     */
+    public function getNutritionalInfo(string $dish)
+    {
+        try {
+            $message = "Hãy cung cấp thông tin dinh dưỡng chi tiết cho món {$dish}, bao gồm calories, protein, carbs, fat và các vitamin, khoáng chất chính.";
+
+            return $this->sendMessage($message);
+        } catch (Exception $e) {
+            Log::error('OpenRouter nutritional info error', [
+                'message' => $e->getMessage(),
+                'dish' => $dish
+            ]);
+
+            return [
+                'success' => false,
+                'error' => 'Không thể lấy thông tin dinh dưỡng. Vui lòng thử lại.'
             ];
         }
     }
@@ -442,7 +426,7 @@ class OpenAiService
     }
 
     /**
-     * Handle API error messages
+     * Handle API error messages (legacy method for backward compatibility)
      */
     private function getErrorMessage($errorData): string
     {
@@ -515,33 +499,5 @@ class OpenAiService
             'gpt-4' => 'GPT-4',
             'gpt-4-turbo' => 'GPT-4 Turbo'
         ];
-    }
-
-    /**
-     * Compute cosine similarity between two vectors.
-     */
-    private function cosineSimilarity(array $a, array $b): float
-    {
-        if (empty($a) || empty($b)) {
-            return 0.0;
-        }
-        $len = min(count($a), count($b));
-        if ($len === 0) {
-            return 0.0;
-        }
-        $dot = 0.0;
-        $normA = 0.0;
-        $normB = 0.0;
-        for ($i = 0; $i < $len; $i++) {
-            $va = (float) $a[$i];
-            $vb = (float) $b[$i];
-            $dot += $va * $vb;
-            $normA += $va * $va;
-            $normB += $vb * $vb;
-        }
-        if ($normA <= 0.0 || $normB <= 0.0) {
-            return 0.0;
-        }
-        return $dot / (sqrt($normA) * sqrt($normB));
     }
 }

@@ -37,7 +37,6 @@ class Recipe extends Model
         'meta_title',
         'meta_description',
         'meta_keywords',
-        'embedding',
         'view_count',
         'favorite_count',
         'rating_count',
@@ -60,8 +59,7 @@ class Recipe extends Model
         'view_count' => 'integer',
         'favorite_count' => 'integer',
         'rating_count' => 'integer',
-        'average_rating' => 'decimal:2',
-        'embedding' => 'array'
+        'average_rating' => 'decimal:2'
     ];
 
     /**
@@ -73,7 +71,7 @@ class Recipe extends Model
 
         static::creating(function ($recipe) {
             if (empty($recipe->slug)) {
-                $recipe->slug = Str::slug($recipe->title);
+                $recipe->slug = $recipe->generateUniqueSlug($recipe->title);
             }
 
             if (empty($recipe->total_time) && ($recipe->cooking_time || $recipe->preparation_time)) {
@@ -84,6 +82,11 @@ class Recipe extends Model
         static::updating(function ($recipe) {
             if ($recipe->isDirty('cooking_time') || $recipe->isDirty('preparation_time')) {
                 $recipe->total_time = ($recipe->cooking_time ?? 0) + ($recipe->preparation_time ?? 0);
+            }
+
+            // Tự động set published_at khi status = approved
+            if ($recipe->isDirty('status') && $recipe->status === 'approved' && !$recipe->published_at) {
+                $recipe->published_at = now();
             }
         });
     }
@@ -150,6 +153,27 @@ class Recipe extends Model
     public function collections()
     {
         return $this->belongsToMany(Collection::class, 'collection_recipes');
+    }
+
+    /**
+     * Get the disease conditions for the recipe.
+     */
+    public function diseaseConditions()
+    {
+        return $this->belongsToMany(DiseaseCondition::class, 'recipe_disease_conditions')
+            ->withPivot('suitability', 'notes', 'modifications')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get suitable disease conditions for this recipe.
+     */
+    public function suitableDiseaseConditions()
+    {
+        return $this->belongsToMany(DiseaseCondition::class, 'recipe_disease_conditions')
+            ->wherePivot('suitability', 'suitable')
+            ->withPivot('notes', 'modifications')
+            ->withTimestamps();
     }
 
     /**
@@ -291,7 +315,7 @@ class Recipe extends Model
      */
     public function getUserCollections(User $user)
     {
-        return $this->collections()->whereHas('user', function($query) use ($user) {
+        return $this->collections()->whereHas('user', function ($query) use ($user) {
             $query->where('id', $user->id);
         })->get();
     }
@@ -302,42 +326,6 @@ class Recipe extends Model
     public function getPrimaryImageAttribute()
     {
         return $this->images()->where('is_primary', true)->first() ?? $this->images()->first();
-    }
-
-    /**
-     * Get the featured image URL.
-     */
-    public function getFeaturedImageUrlAttribute()
-    {
-        if (!$this->featured_image) {
-            return null;
-        }
-        
-        return asset('storage/' . $this->featured_image);
-    }
-
-    /**
-     * Get the featured image URL for Filament forms.
-     */
-    public function getFeaturedImageAttribute($value)
-    {
-        if (!$value) {
-            return null;
-        }
-        
-        return $value;
-    }
-
-    /**
-     * Get the featured image for Filament forms.
-     */
-    public function getFeaturedImageForFormsAttribute()
-    {
-        if (!$this->featured_image) {
-            return null;
-        }
-        
-        return $this->featured_image;
     }
 
     /**
@@ -374,5 +362,27 @@ class Recipe extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    /**
+     * Generate a unique slug for recipe.
+     */
+    public function generateUniqueSlug(string $title, ?int $excludeId = null): string
+    {
+        $baseSlug = Str::slug($title);
+        $slug = $baseSlug;
+        $counter = 1;
+
+        // Kiểm tra xem slug đã tồn tại chưa
+        while (
+            static::where('slug', $slug)->when($excludeId, function ($query) use ($excludeId) {
+                return $query->where('id', '!=', $excludeId);
+            })->exists()
+        ) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        return $slug;
     }
 }

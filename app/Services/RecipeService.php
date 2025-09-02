@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Models\Recipe;
 use App\Models\User;
-use App\Services\EmbeddingService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+
 
 class RecipeService
 {
@@ -21,7 +23,7 @@ class RecipeService
 
         $recipe = new Recipe($recipeData);
         $recipe->user_id = $user->id;
-        $recipe->slug = Str::slug($data['title']);
+        $recipe->slug = $this->generateUniqueSlug($data['title']);
         $recipe->status = $data['status'] ?? 'pending';
         $recipe->save();
 
@@ -39,25 +41,6 @@ class RecipeService
             $this->handleFeaturedImage($recipe, $data['featured_image']);
         }
 
-        // Generate and assign embedding
-        try {
-            /** @var EmbeddingService $embeddingService */
-            $embeddingService = app(EmbeddingService::class);
-            $embeddingText = $this->buildRecipeEmbeddingText([
-                'title' => $data['title'] ?? '',
-                'summary' => $data['summary'] ?? null,
-                'description' => $data['description'] ?? null,
-                'ingredients' => $recipe->ingredients,
-                'instructions' => $recipe->instructions,
-            ]);
-            if ($embeddingText !== '') {
-                $recipe->embedding = $embeddingService->embed($embeddingText);
-                $recipe->save();
-            }
-        } catch (\Throwable $e) {
-            // Soft-fail: keep recipe creation even if embedding fails
-        }
-
         // Auto moderate the recipe if auto moderation is enabled
         if (config('app.auto_moderation_enabled', true)) {
             $this->autoModerateRecipe($recipe);
@@ -73,9 +56,9 @@ class RecipeService
     {
         // Xử lý dữ liệu trước khi cập nhật
         $recipeData = $this->prepareRecipeData($data);
-        
+
         $recipe->update($recipeData);
-        $recipe->slug = Str::slug($data['title']);
+        $recipe->slug = $this->generateUniqueSlug($data['title'], $recipe->id);
         $recipe->status = $data['status'] ?? 'pending';
         $recipe->save();
 
@@ -87,29 +70,10 @@ class RecipeService
         if (isset($data['tag_ids'])) {
             $recipe->tags()->sync($data['tag_ids']);
         }
-        \Log::info('Recipe data: ' . json_encode($data['featured_image']));
+
         // Handle featured image
         if (isset($data['featured_image']) && $data['featured_image'] instanceof UploadedFile) {
             $this->handleFeaturedImage($recipe, $data['featured_image'], true);
-        }
-
-        // Generate and assign embedding
-        try {
-            /** @var EmbeddingService $embeddingService */
-            $embeddingService = app(EmbeddingService::class);
-            $embeddingText = $this->buildRecipeEmbeddingText([
-                'title' => $data['title'] ?? $recipe->title,
-                'summary' => $data['summary'] ?? $recipe->summary,
-                'description' => $data['description'] ?? $recipe->description,
-                'ingredients' => $recipe->ingredients,
-                'instructions' => $recipe->instructions,
-            ]);
-            if ($embeddingText !== '') {
-                $recipe->embedding = $embeddingService->embed($embeddingText);
-                $recipe->save();
-            }
-        } catch (\Throwable $e) {
-            // Soft-fail: keep recipe update even if embedding fails
         }
 
         // Auto moderate the recipe if it's pending and auto moderation is enabled
@@ -178,6 +142,16 @@ class RecipeService
             'published_at' => now(),
         ]);
 
+        // Log approval reason if provided
+        if ($reason) {
+            Log::info("Recipe {$recipe->id} approved: {$reason}", [
+                'recipe_id' => $recipe->id,
+                'title' => $recipe->title,
+                'approver_id' => $approver?->id,
+                'reason' => $reason
+            ]);
+        }
+
         return $recipe;
     }
 
@@ -230,8 +204,8 @@ class RecipeService
     public function getFilteredRecipes(array $filters = [], int $perPage = 12)
     {
         $query = Recipe::with(['user', 'categories', 'tags', 'images', 'favorites'])
-            ->where('status', 'approved');
-           
+            ->where('status', 'approved')
+            ->whereNotNull('published_at');
 
         // Apply filters
         $this->applyFilters($query, $filters);
@@ -413,61 +387,11 @@ class RecipeService
     }
 
     /**
-     * Build representative text from recipe fields for embedding.
+     * Generate a unique slug for recipe.
      */
-    protected function buildRecipeEmbeddingText(array $fields): string
+    protected function generateUniqueSlug(string $title, ?int $excludeId = null): string
     {
-        $parts = [];
-        $title = trim((string)($fields['title'] ?? ''));
-        if ($title !== '') {
-            $parts[] = $title;
-        }
-
-        $summary = trim((string)($fields['summary'] ?? ''));
-        if ($summary !== '') {
-            $parts[] = $summary;
-        }
-
-        $description = trim((string)($fields['description'] ?? ''));
-        if ($description !== '') {
-            $parts[] = $description;
-        }
-
-        $ingredients = $fields['ingredients'] ?? [];
-        if (is_array($ingredients) && !empty($ingredients)) {
-            $ingredientStrings = [];
-            foreach ($ingredients as $ingredient) {
-                $name = trim((string)($ingredient['name'] ?? ''));
-                $amount = trim((string)($ingredient['amount'] ?? ''));
-                if ($name !== '') {
-                    $ingredientStrings[] = $amount !== '' ? ($name . ' - ' . $amount) : $name;
-                }
-                if (count($ingredientStrings) >= 30) {
-                    break;
-                }
-            }
-            if (!empty($ingredientStrings)) {
-                $parts[] = 'Ingredients: ' . implode(', ', $ingredientStrings);
-            }
-        }
-
-        $instructions = $fields['instructions'] ?? [];
-        if (is_array($instructions) && !empty($instructions)) {
-            $instructionTexts = [];
-            foreach ($instructions as $step) {
-                $instruction = trim((string)($step['instruction'] ?? ''));
-                if ($instruction !== '') {
-                    $instructionTexts[] = $instruction;
-                }
-                if (count($instructionTexts) >= 20) {
-                    break;
-                }
-            }
-            if (!empty($instructionTexts)) {
-                $parts[] = 'Instructions: ' . implode(' \n ', $instructionTexts);
-            }
-        }
-
-        return trim(implode(' \n ', $parts));
+        $recipe = new Recipe();
+        return $recipe->generateUniqueSlug($title, $excludeId);
     }
 }

@@ -13,16 +13,13 @@ use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use App\Filament\Widgets\StatsOverview;
 use App\Filament\Widgets\LatestRecipes;
-use App\Filament\Widgets\PaymentStatsWidget;
-use App\Filament\Resources\ShopItemResource;
-use App\Filament\Resources\PaymentResource;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Http\Middleware\AdminAccess;
+// use App\Http\Middleware\FilamentPanelAccess; // Tạm thời không dùng
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -42,7 +39,15 @@ class AdminPanelProvider extends PanelProvider
                 \Filament\Navigation\NavigationItem::make('Về web')
                     ->url('/')
                     ->icon('heroicon-o-home')
-                    ->sort(100)
+                    ->sort(100),
+                // \Filament\Navigation\NavigationItem::make('Quản lý thanh toán')
+                //     ->url('/admin/payments')
+                //     ->icon('heroicon-o-credit-card')
+                //     ->sort(200)
+                //     ->badge(function () {
+                //         $pendingCount = \App\Models\PaymentInvoice::where('status', 'pending')->count();
+                //         return $pendingCount > 0 ? $pendingCount : null;
+                //     })
             ])
             ->colors([
                 'primary' => [
@@ -74,10 +79,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->font('Inter')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->resources([
-                ShopItemResource::class,
-                PaymentResource::class,
-            ])
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 \App\Filament\Pages\Dashboard::class,
@@ -86,7 +87,6 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 StatsOverview::class,
                 LatestRecipes::class,
-                PaymentStatsWidget::class,
                 Widgets\AccountWidget::class,
             ])
             ->middleware([
@@ -102,7 +102,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-                AdminAccess::class,
+                // FilamentPanelAccess::class . ':admin', // Tạm thời không dùng
             ])
             ->authGuard('web');
     }

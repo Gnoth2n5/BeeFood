@@ -10,10 +10,11 @@ use App\Models\Favorite;
 use App\Services\CollectionService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use Livewire\Attributes\Layout;
-use Illuminate\Support\Facades\Log;
+
 #[Layout('layouts.app')]
 class ProfilePage extends Component
 {
@@ -86,6 +87,18 @@ class ProfilePage extends Component
         $this->user = auth()->user();
         $this->profile = $this->user->profile;
 
+        // Create profile if it doesn't exist
+        if (!$this->profile) {
+            $this->profile = UserProfile::create([
+                'user_id' => $this->user->id,
+                'country' => 'Vietnam',
+                'cooking_experience' => 'beginner',
+                'dietary_preferences' => [],
+                'allergies' => [],
+                'health_conditions' => []
+            ]);
+        }
+
         // Set active tab from session if available
         if (session('activeTab')) {
             $this->activeTab = session('activeTab');
@@ -99,7 +112,7 @@ class ProfilePage extends Component
             $this->userLongitude = $userLocation['longitude'];
             $this->nearestCity = \App\Models\VietnamCity::where('code', $userLocation['nearest_city_code'])->first();
 
-            \Log::info('Loaded user location from session: ' . $userLocation['nearest_city_name'] . ' (' . $userLocation['nearest_city_code'] . ')');
+            Log::info('Loaded user location from session: ' . $userLocation['nearest_city_name'] . ' (' . $userLocation['nearest_city_code'] . ')');
         } else {
             // Tự động lấy vị trí khi component được load
             $this->dispatch('auto-get-location');
@@ -115,14 +128,27 @@ class ProfilePage extends Component
         $this->email = $this->user->email;
         $this->province = $this->user->province ?? '';
         $this->bio = $this->user->bio ?? '';
-        $this->phone = $this->profile->phone ?? '';
-        $this->address = $this->profile->address ?? '';
-        $this->city = $this->profile->city ?? '';
-        $this->country = $this->profile->country ?? 'Vietnam';
-        $this->cooking_experience = $this->profile->cooking_experience ?? 'beginner';
-        $this->dietary_preferences = $this->profile->dietary_preferences ?? [];
-        $this->allergies = is_array($this->profile->allergies) ? implode(', ', $this->profile->allergies) : ($this->profile->allergies ?? '');
-        $this->health_conditions = is_array($this->profile->health_conditions) ? implode(', ', $this->profile->health_conditions) : ($this->profile->health_conditions ?? '');
+
+        if ($this->profile) {
+            $this->phone = $this->profile->phone ?? '';
+            $this->address = $this->profile->address ?? '';
+            $this->city = $this->profile->city ?? '';
+            $this->country = $this->profile->country ?? 'Vietnam';
+            $this->cooking_experience = $this->profile->cooking_experience ?? 'beginner';
+            $this->dietary_preferences = $this->profile->dietary_preferences ?? [];
+            $this->allergies = is_array($this->profile->allergies) ? implode(', ', $this->profile->allergies) : ($this->profile->allergies ?? '');
+            $this->health_conditions = is_array($this->profile->health_conditions) ? implode(', ', $this->profile->health_conditions) : ($this->profile->health_conditions ?? '');
+        } else {
+            // Default values if profile doesn't exist
+            $this->phone = '';
+            $this->address = '';
+            $this->city = '';
+            $this->country = 'Vietnam';
+            $this->cooking_experience = 'beginner';
+            $this->dietary_preferences = [];
+            $this->allergies = '';
+            $this->health_conditions = '';
+        }
     }
 
     public function loadStats()
@@ -135,51 +161,56 @@ class ProfilePage extends Component
     public function toggleEdit()
     {
         $this->isEditing = !$this->isEditing;
-        if (!$this->isEditing) {
+        if ($this->isEditing) {
+            // When entering edit mode, switch to settings tab
+            $this->activeTab = 'settings';
+        } else {
             $this->loadProfileData(); // Reset form
             $this->avatar = null; // Reset avatar
+            // When exiting edit mode, switch back to recipes tab if currently on settings
+            if ($this->activeTab === 'settings') {
+                $this->activeTab = 'recipes';
+            }
         }
     }
 
     public function saveProfile()
     {
+        $this->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $this->user->id,
+            'province' => 'nullable|string|max:100',
+            'bio' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500',
+            'city' => 'nullable|string|max:100',
+            'country' => 'nullable|string|max:100',
+            'cooking_experience' => 'required|in:beginner,intermediate,advanced',
+            'dietary_preferences' => 'array',
+            'allergies' => 'nullable|string|max:500',
+            'health_conditions' => 'nullable|string|max:500',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ], [
+            'name.required' => 'Họ tên là bắt buộc.',
+            'name.max' => 'Họ tên không được vượt quá 255 ký tự.',
+            'email.required' => 'Email là bắt buộc.',
+            'email.email' => 'Email không đúng định dạng.',
+            'email.unique' => 'Email này đã được sử dụng.',
+            'bio.max' => 'Giới thiệu bản thân không được vượt quá 500 ký tự.',
+            'phone.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
+            'address.max' => 'Địa chỉ không được vượt quá 500 ký tự.',
+            'city.max' => 'Thành phố không được vượt quá 100 ký tự.',
+            'country.max' => 'Quốc gia không được vượt quá 100 ký tự.',
+            'cooking_experience.required' => 'Kinh nghiệm nấu ăn là bắt buộc.',
+            'cooking_experience.in' => 'Kinh nghiệm nấu ăn không hợp lệ.',
+            'allergies.max' => 'Dị ứng thực phẩm không được vượt quá 500 ký tự.',
+            'health_conditions.max' => 'Tình trạng sức khỏe không được vượt quá 500 ký tự.',
+            'avatar.image' => 'File phải là hình ảnh.',
+            'avatar.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif, webp.',
+            'avatar.max' => 'Kích thước hình ảnh không được vượt quá 2MB.',
+        ]);
+
         try {
-            \Log::info('saveProfile called - method started');
-            \Log::info('Current user: ' . $this->user->id);
-            \Log::info('Current profile: ' . $this->profile->id);
-            $this->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:users,email,' . $this->user->id,
-                'province' => 'nullable|string|max:100',
-                'bio' => 'nullable|string|max:500',
-                'phone' => 'nullable|string|max:20',
-                'address' => 'nullable|string|max:500',
-                'city' => 'nullable|string|max:100',
-                'country' => 'nullable|string|max:100',
-                'cooking_experience' => 'required|in:beginner,intermediate,advanced',
-                'dietary_preferences' => 'array',
-                'allergies' => 'nullable|string|max:500',
-                'health_conditions' => 'nullable|string|max:500',
-                'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
-            ], [
-                'name.required' => 'Họ tên là bắt buộc.',
-                'name.max' => 'Họ tên không được vượt quá 255 ký tự.',
-                'email.required' => 'Email là bắt buộc.',
-                'email.email' => 'Email không đúng định dạng.',
-                'email.unique' => 'Email này đã được sử dụng.',
-                'bio.max' => 'Giới thiệu bản thân không được vượt quá 500 ký tự.',
-                'phone.max' => 'Số điện thoại không được vượt quá 20 ký tự.',
-                'address.max' => 'Địa chỉ không được vượt quá 500 ký tự.',
-                'city.max' => 'Thành phố không được vượt quá 100 ký tự.',
-                'country.max' => 'Quốc gia không được vượt quá 100 ký tự.',
-                'cooking_experience.required' => 'Kinh nghiệm nấu ăn là bắt buộc.',
-                'cooking_experience.in' => 'Kinh nghiệm nấu ăn không hợp lệ.',
-                'allergies.max' => 'Dị ứng thực phẩm không được vượt quá 500 ký tự.',
-                'health_conditions.max' => 'Tình trạng sức khỏe không được vượt quá 500 ký tự.',
-                'avatar.image' => 'File phải là hình ảnh.',
-                'avatar.mimes' => 'Hình ảnh phải có định dạng: jpeg, png, jpg, gif, webp.',
-                'avatar.max' => 'Kích thước hình ảnh không được vượt quá 2MB.',
-            ]);
             // Handle avatar upload first
             if ($this->avatar) {
                 // Delete old avatar if exists (only if it's a local file)
@@ -212,17 +243,32 @@ class ProfilePage extends Component
             $allergiesArray = !empty($this->allergies) ? array_map('trim', explode(',', $this->allergies)) : [];
             $healthConditionsArray = !empty($this->health_conditions) ? array_map('trim', explode(',', $this->health_conditions)) : [];
 
-            // Update profile
-            $this->profile->update([
-                'phone' => $this->phone,
-                'address' => $this->address,
-                'city' => $this->city,
-                'country' => $this->country,
-                'cooking_experience' => $this->cooking_experience,
-                'dietary_preferences' => $this->dietary_preferences,
-                'allergies' => $allergiesArray,
-                'health_conditions' => $healthConditionsArray,
-            ]);
+            // Update or create profile
+            if ($this->profile) {
+                $this->profile->update([
+                    'phone' => $this->phone,
+                    'address' => $this->address,
+                    'city' => $this->city,
+                    'country' => $this->country,
+                    'cooking_experience' => $this->cooking_experience,
+                    'dietary_preferences' => $this->dietary_preferences,
+                    'allergies' => $allergiesArray,
+                    'health_conditions' => $healthConditionsArray,
+                ]);
+            } else {
+                // Create new profile if it doesn't exist
+                $this->profile = UserProfile::create([
+                    'user_id' => $this->user->id,
+                    'phone' => $this->phone,
+                    'address' => $this->address,
+                    'city' => $this->city,
+                    'country' => $this->country,
+                    'cooking_experience' => $this->cooking_experience,
+                    'dietary_preferences' => $this->dietary_preferences,
+                    'allergies' => $allergiesArray,
+                    'health_conditions' => $healthConditionsArray,
+                ]);
+            }
 
             // Refresh user data
             $this->user->refresh();
@@ -230,12 +276,21 @@ class ProfilePage extends Component
 
             $this->isEditing = false;
             $this->avatar = null; // Reset avatar after save
+            // Switch back to recipes tab after successful save
+            $this->activeTab = 'recipes';
             $this->dispatch('profile-updated');
             session()->flash('success', 'Hồ sơ đã được cập nhật thành công!');
-
         } catch (\Exception $e) {
-            \Log::error('Error saving profile: ' . $e->getMessage());
+            // Log the error for debugging
+            Log::error('Profile save error: ' . $e->getMessage(), [
+                'user_id' => $this->user->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
             session()->flash('error', 'Có lỗi xảy ra khi cập nhật hồ sơ: ' . $e->getMessage());
+
+            // Reset editing state on error
+            $this->isEditing = true;
         }
     }
 
@@ -373,7 +428,6 @@ class ProfilePage extends Component
 
             session()->flash('success', 'Đã tạo bộ sưu tập "' . $collection->name . '" thành công!');
             $this->dispatch('flash-message', message: 'Đã tạo bộ sưu tập "' . $collection->name . '" thành công!', type: 'success');
-
         } catch (\Exception $e) {
             session()->flash('error', 'Có lỗi xảy ra khi tạo bộ sưu tập: ' . $e->getMessage());
             $this->dispatch('flash-message', message: 'Có lỗi xảy ra khi tạo bộ sưu tập: ' . $e->getMessage(), type: 'error');
@@ -394,7 +448,7 @@ class ProfilePage extends Component
     // Location methods
     public function getUserLocationFromBrowser()
     {
-        \Log::info('getUserLocationFromBrowser called');
+        Log::info('getUserLocationFromBrowser called');
         $this->dispatch('get-user-location');
     }
 
@@ -403,7 +457,7 @@ class ProfilePage extends Component
      */
     public function randomCity()
     {
-        \Log::info('randomCity called - user denied location permission');
+        Log::info('randomCity called - user denied location permission');
 
         // Lấy danh sách tất cả thành phố có dữ liệu thời tiết
         $citiesWithWeather = \App\Models\WeatherData::select('city_code')
@@ -422,7 +476,7 @@ class ProfilePage extends Component
         }
 
         if ($randomCity) {
-            \Log::info('Random city selected: ' . $randomCity->name . ' (' . $randomCity->code . ')');
+            Log::info('Random city selected: ' . $randomCity->name . ' (' . $randomCity->code . ')');
             $this->nearestCity = $randomCity;
 
             // Lưu vào session để dùng ở trang khác
@@ -438,14 +492,14 @@ class ProfilePage extends Component
 
             $this->dispatch('alert', message: 'Đã chọn ngẫu nhiên thành phố: ' . $randomCity->name);
         } else {
-            \Log::info('No random city found');
+            Log::info('No random city found');
             $this->dispatch('alert', message: 'Không thể chọn thành phố ngẫu nhiên');
         }
     }
 
     public function setUserLocation($latitude, $longitude)
     {
-        \Log::info('ProfilePage setUserLocation called with: ' . $latitude . ', ' . $longitude);
+        Log::info('ProfilePage setUserLocation called with: ' . $latitude . ', ' . $longitude);
         $this->userLatitude = $latitude;
         $this->userLongitude = $longitude;
 
@@ -453,7 +507,7 @@ class ProfilePage extends Component
         $this->nearestCity = $this->findNearestCity($latitude, $longitude);
 
         if ($this->nearestCity) {
-            \Log::info('Nearest city found: ' . $this->nearestCity->name . ' (' . $this->nearestCity->code . ')');
+            Log::info('Nearest city found: ' . $this->nearestCity->name . ' (' . $this->nearestCity->code . ')');
             // Tự động điền thông tin địa chỉ
             $this->city = $this->nearestCity->name;
             $this->country = 'Vietnam';
@@ -468,7 +522,7 @@ class ProfilePage extends Component
                 ]
             ]);
         } else {
-            \Log::info('No nearest city found');
+            Log::info('No nearest city found');
         }
     }
 

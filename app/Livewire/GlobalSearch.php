@@ -115,14 +115,8 @@ class GlobalSearch extends Component
     public function goToSearchPage()
     {
         if (!empty($this->searchQuery)) {
-            // Nếu có kết quả tìm kiếm, chuyển đến công thức đầu tiên
-            if ($this->searchResults['recipes']->count() > 0) {
-                $firstRecipe = $this->searchResults['recipes']->first();
-                $this->closeSearch();
-                return redirect()->route('recipes.show', $firstRecipe);
-            }
-            // Nếu không có kết quả, chuyển đến trang tìm kiếm đầy đủ
             $this->closeSearch();
+            // Luôn chuyển đến trang tìm kiếm đầy đủ thay vì redirect trực tiếp đến recipe
             return redirect()->route('recipes.index', ['search' => $this->searchQuery]);
         }
     }
@@ -136,7 +130,7 @@ class GlobalSearch extends Component
     {
         // Lấy các từ khóa tìm kiếm phổ biến từ tags và categories
         $popularTags = Tag::orderBy('usage_count', 'desc')->limit(5)->pluck('name')->toArray();
-        $popularCategories = Category::where('parent_id', null)->limit(3)->pluck('name')->toArray();
+        $popularCategories = Category::limit(3)->pluck('name')->toArray();
 
         $this->popularSearches = array_merge($popularTags, $popularCategories);
     }
